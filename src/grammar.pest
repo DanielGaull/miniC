@@ -1,6 +1,21 @@
 COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!"\n" ~ ANY)*) }
 WHITESPACE = _{ " " | "\n" | "\t" | "\r" }
 
+program = { SOI ~ topLevel* ~ EOI }
+
+// == Top-level stuff ==
+topLevel = { function | struct | typedef | import | varDec }
+
+function = { typ ~ identifier ~ "(" ~ paramList ~ ")" ~ "{" ~ statement* ~ "}" }
+
+struct = { "struct" ~ identifier ~ "{" ~ structInner ~ "}" }
+structInner = { structVarDec }
+structVarDec = { typ ~ identifer ~ ";" }
+
+typedef = { "typedef" ~ (struct | typ) ~ identifier }
+
+import = { "#import" ~ string }
+
 // == Core statements ==
 statement = { (expression | varDec | varAssign | binOpVarAssign | return) ~ ";" }
 varAssign = { identExpr ~ "=" ~ expression }
@@ -35,6 +50,7 @@ arithLogicBinOp = { "+" | "-" | "*" | "/" | "&" | "|" | "&&" | "||" | "<<" | ">>
 binOp = { arithLogicBinOp | "==" | "!=" | ">" | "<" | ">=" | "<=" }
 
 exprList = _{ (expression ~ ",")* ~ expression? }
+paramList = _{ (typ ~ identifier ~ ",")* ~ typ ~ identifier }
 
 identExpr = { identifier | ("*" ~ expression) }
 
