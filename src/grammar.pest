@@ -1,0 +1,46 @@
+COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!"\n" ~ ANY)*) }
+WHITESPACE = _{ " " | "\n" | "\t" | "\r" }
+
+// == Core statements ==
+statement = { (expression | varDec | varAssign | binOpVarAssign | return) ~ ";" }
+varAssign = { identExpr ~ "=" ~ expression }
+varDec = { typ ~ identifier ~ ("=" ~ expression)? }
+binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
+return = { "return" ~ expression }
+
+// == Expressions ==
+atom = { number | boolean | string | reference | identifier | "(" ~ expression ~ ")" }
+exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | "" }
+expression = { atom ~ exprTail }
+
+identifier = ${ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+reference = ${ "&" ~ identifier }
+
+typ = { "struct"? ~ identifier ~ "*"? }
+
+number = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ ("." ~ (ASCII_DIGIT)+)? }
+boolean = { "true" | "false" }
+
+string = ${ "\"" ~ strinner ~ "\"" }
+strinner = @{ strchar* }
+strchar = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
+// Other utils
+arithLogicBinOp = { "+" | "-" | "*" | "/" | "&" | "|" | "&&" | "||" | "<<" | ">>" }
+binOp = { arithLogicBinOp | "==" | "!=" | ">" | "<" | ">=" | "<=" }
+
+exprList = _{ (expression ~ ",")* ~ expression? }
+
+identExpr = { identifier | ("*" ~ expression) }
+
+// Tails
+binaryOperationTail = { binOp ~ expression ~ exprTail }
+indexTail = { "[" ~ expression ~ "]" ~ exprTail }
+memberAccessTail = { "." ~ identifier ~ exprTail }
+pointerAccessTail = { "->" ~ identifier ~ exprTail }
+callTail = { "(" ~ exprList ~ ")" ~ exprTail }
