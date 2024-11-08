@@ -140,7 +140,10 @@ pub struct Expression {
 }
 impl SimpleCodeGen for Expression {
     fn generate(&self) -> String {
-        todo!()
+        let mut s = String::new();
+        s.push_str(self.atom.generate().as_str());
+        s.push_str(self.tail.generate().as_str());
+        s
     }
 }
 

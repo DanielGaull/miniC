@@ -4,7 +4,8 @@ WHITESPACE = _{ " " | "\n" | "\t" | "\r" }
 program = { SOI ~ topLevel* ~ EOI }
 
 // == Top-level stuff ==
-topLevel = { function | struct | typedef | import | varDec }
+topLevel = { function | struct | import | topLevelWithSemicolon }
+topLevelWithSemicolon = _{ (varDec | typedef) ~ ";" }
 
 function = { typ ~ identifier ~ "(" ~ paramList ~ ")" ~ "{" ~ statement* ~ "}" }
 

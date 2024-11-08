@@ -18,12 +18,11 @@ mod tests {
             let path = entry.unwrap().path();
             let in_path = path.join("in.c");
             let out_path = path.join("out.c");
-            let out_content = read_file_to_string(&out_path);
+            let out_content = read_file_to_string(&out_path).replace("\r\n", "\n");
 
             let program = MyMiniCParser::parse_file(String::from(in_path.to_str().unwrap()));
             if program.is_err() {
-                println!("ERROR: {}", program.err().unwrap());
-                assert!(false);
+                panic!("ERROR: {}", program.err().unwrap());
             } else {
                 let generated = generator.code_gen(program.unwrap());
                 assert_eq!(out_content, generated);

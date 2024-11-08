@@ -21,14 +21,17 @@ impl MyMiniCParser {
     }
 
     fn parse_main(pair: Pair<Rule>) -> Result<Program, String> {
-        match pair.as_rule() {
+        let rule = pair.as_rule();
+        match rule {
             Rule::program => {
                 let mut statements = Vec::<TopLevel>::new();
                 for p in pair.into_inner() {
-                    match p.as_rule() {
+                    let r = p.as_rule();
+                    match r {
                         Rule::topLevel => {
                             statements.push(Self::parse_top_level(p.into_inner().next().unwrap())?);
                         }
+                        Rule::EOI => (), // Do nothing, reached end of file
                         _ => return Result::Err(String::from("Could not parse top-level statement")),
                     }
                 }
@@ -82,8 +85,9 @@ impl MyMiniCParser {
                 let atom_pair = pairs.next().unwrap();
                 let atom = Self::parse_atom(atom_pair.into_inner().next().unwrap())?;
                 let mut expr_tail = ExprTail::None;
-                if pairs.next().is_some() {
-                    let expr_tail_pair = pairs.next().unwrap();
+                let next = pairs.next();
+                if next.is_some() {
+                    let expr_tail_pair = next.unwrap();
                     expr_tail = Self::parse_expr_tail(expr_tail_pair)?;
                 }
                 Result::Ok(Expression {
@@ -175,7 +179,7 @@ impl MyMiniCParser {
                         _ => Result::Err(String::from("Could not parse expression tail")),
                     }
                 } else {
-                    Result::Err(String::from("Coult not read inner of expression tail"))
+                    Result::Ok(ExprTail::None)
                 }
             },
             _ => Result::Err(String::from("Could not parse expression tail")),
