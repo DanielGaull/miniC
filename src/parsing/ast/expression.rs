@@ -135,8 +135,8 @@ impl SimpleCodeGen for ExprTail {
 }
 
 pub struct Expression {
-    atom: Atom,
-    tail: ExprTail,
+    pub atom: Atom,
+    pub tail: ExprTail,
 }
 impl SimpleCodeGen for Expression {
     fn generate(&self) -> String {

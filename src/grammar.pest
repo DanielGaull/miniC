@@ -24,7 +24,7 @@ binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
 return = { "return" ~ expression }
 
 // == Expressions ==
-atom = { number | boolean | string | reference | identifier | "(" ~ expression ~ ")" }
+atom = { int | long | double | float | boolean | string | reference | identifier | "(" ~ expression ~ ")" }
 exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | "" }
 expression = { atom ~ exprTail }
 
@@ -34,7 +34,11 @@ reference = ${ "&" ~ identifier }
 
 typ = { "struct"? ~ identifier ~ "*"? }
 
-number = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ ("." ~ (ASCII_DIGIT)+)? }
+//char = @{ "'" ~ ANY ~ "'" }
+int = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ }
+long = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ "L" }
+double = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ "." ~ (ASCII_DIGIT)+ }
+float = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ ("." ~ (ASCII_DIGIT)+)? ~ "f" }
 boolean = { "true" | "false" }
 
 string = ${ "\"" ~ strinner ~ "\"" }
