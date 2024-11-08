@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, ExprTail, Expression}, program::Program, statement::Statement, toplevel::TopLevel, types::Type};
+use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, program::Program, statement::Statement, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -175,7 +175,31 @@ impl MyMiniCParser {
                                 }
                             )
                         },
-                        // TODO: Index, binop
+                        Rule::binaryOperationTail => {
+                            let mut pairs = tail_pair.into_inner();
+                            let op = Self::parse_binop(String::from(pairs.next().unwrap().as_str()))?;
+                            let expr = Self::parse_expression(pairs.next().unwrap())?;
+                            let next_tail = Self::parse_expr_tail(pairs.next().unwrap())?;
+                            Result::Ok(
+                                ExprTail::BinaryOp { 
+                                    op: op,
+                                    right: Box::new(expr),
+                                    next: Box::new(next_tail),
+                                }
+                            )
+                        },
+                        Rule::indexTail => {
+                            let mut pairs = tail_pair.into_inner();
+                            let expr = Self::parse_expression(pairs.next().unwrap())?;
+                            let next_tail = Self::parse_expr_tail(pairs.next().unwrap())?;
+                            Result::Ok(
+                                ExprTail::Index { 
+                                    inner: Box::new(expr),
+                                    next: Box::new(next_tail),
+                                }
+                            )
+                        },
+                        // TODO: index
                         _ => Result::Err(String::from("Could not parse expression tail")),
                     }
                 } else {
@@ -201,6 +225,49 @@ impl MyMiniCParser {
                 )
             },
             _ => Result::Err(String::from("Could not parse type")),
+        }
+    }
+
+    fn parse_binop(op: String) -> Result<BinOp, String> {
+        if op == "+" {
+            Ok(BinOp::Add)
+        } else if op == "-" {
+            Ok(BinOp::Sub)
+        } else if op == "*" {
+            Ok(BinOp::Mul)
+        } else if op == "/" {
+            Ok(BinOp::Div)
+        } else if op == "%" {
+            Ok(BinOp::Mod)
+        } else if op == "&" {
+            Ok(BinOp::BitAnd)
+        } else if op == "|" {
+            Ok(BinOp::BitOr)
+        } else if op == "&&" {
+            Ok(BinOp::LogicAnd)
+        } else if op == "||" {
+            Ok(BinOp::LogicOr)
+        } else if op == "<<" {
+            Ok(BinOp::LeftShift)
+        } else if op == ">>" {
+            Ok(BinOp::RightShift)
+        } else if op == "==" {
+            Ok(BinOp::IsEqual)
+        } else if op == "!=" {
+            Ok(BinOp::IsNotEqual)
+        } else if op == ">" {
+            Ok(BinOp::IsGT)
+        } else if op == ">=" {
+            Ok(BinOp::IsGTE)
+        } else if op == "<" {
+            Ok(BinOp::IsLT)
+        } else if op == "<=" {
+            Ok(BinOp::IsLTE)
+        } else {
+            let mut msg = String::from("Invalid binary operator: '");
+            msg.push_str(op.as_str());
+            msg.push_str("'");
+            Err(msg)
         }
     }
 }

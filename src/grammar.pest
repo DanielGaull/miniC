@@ -52,7 +52,7 @@ strchar = {
 
 // Other utils
 arithLogicBinOp = { "+" | "-" | "*" | "/" | "%" | "&" | "|" | "&&" | "||" | "<<" | ">>" }
-binOp = { arithLogicBinOp | "==" | "!=" | ">" | "<" | ">=" | "<=" }
+binOp = _{ arithLogicBinOp | "==" | "!=" | ">" | "<" | ">=" | "<=" }
 
 exprList = _{ (expression ~ ",")* ~ expression? }
 paramList = _{ (typ ~ identifier ~ ",")* ~ typ ~ identifier }
