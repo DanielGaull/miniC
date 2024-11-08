@@ -10,7 +10,7 @@ function = { typ ~ identifier ~ "(" ~ paramList ~ ")" ~ "{" ~ statement* ~ "}" }
 
 struct = { "struct" ~ identifier ~ "{" ~ structInner ~ "}" }
 structInner = { structVarDec }
-structVarDec = { typ ~ identifer ~ ";" }
+structVarDec = { typ ~ identifier ~ ";" }
 
 typedef = { "typedef" ~ (struct | typ) ~ identifier }
 
@@ -46,7 +46,7 @@ strchar = {
 }
 
 // Other utils
-arithLogicBinOp = { "+" | "-" | "*" | "/" | "&" | "|" | "&&" | "||" | "<<" | ">>" }
+arithLogicBinOp = { "+" | "-" | "*" | "/" | "%" | "&" | "|" | "&&" | "||" | "<<" | ">>" }
 binOp = { arithLogicBinOp | "==" | "!=" | ">" | "<" | ">=" | "<=" }
 
 exprList = _{ (expression ~ ",")* ~ expression? }
