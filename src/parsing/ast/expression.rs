@@ -42,7 +42,7 @@ impl SimpleCodeGen for Atom {
                 s
             },
             Atom::Double(v) => v.to_string(),
-            Atom::Boolean(v) => String::from(if *v { "true" } else { "false" }),
+            Atom::Boolean(v) => String::from(if *v { "1" } else { "0" }),
             Atom::String(v) => {
                 let mut s = String::new();
                 s.push_str("\"");

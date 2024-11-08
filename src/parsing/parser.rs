@@ -27,11 +27,7 @@ impl MyMiniCParser {
                 for p in pair.into_inner() {
                     match p.as_rule() {
                         Rule::topLevel => {
-                            let parsed = Self::parse_top_level(p.into_inner().next().unwrap());
-                            if parsed.is_err() {
-                                return Result::Err(parsed.err().unwrap());
-                            }
-                            statements.push(parsed.unwrap());
+                            statements.push(Self::parse_top_level(p.into_inner().next().unwrap())?);
                         }
                         _ => return Result::Err(String::from("Could not parse top-level statement")),
                     }
@@ -50,22 +46,16 @@ impl MyMiniCParser {
         match pair.as_rule() {
             Rule::varDec => {
                 let mut pairs = pair.into_inner();
-                let typ = Self::parse_type(pairs.next().unwrap());
-                if typ.is_err() {
-                    return Result::Err(typ.err().unwrap());
-                }
+                let typ = Self::parse_type(pairs.next().unwrap())?;
                 let name = pairs.next().unwrap().as_str();
                 let mut init_val: Option<Expression> = None;
                 if let Some(expr_pair) = pairs.next() {
-                    let result = Self::parse_expression(expr_pair);
-                    if result.is_err() {
-                        return Result::Err(result.err().unwrap());
-                    }
-                    init_val = Some(result.unwrap());
+                    let result = Self::parse_expression(expr_pair)?;
+                    init_val = Some(result);
                 }
                 Result::Ok(
                     TopLevel::VarDeclaration { 
-                        typ: typ.unwrap(),
+                        typ: typ,
                         name: String::from(name),
                         right: init_val,
                     }
@@ -78,12 +68,8 @@ impl MyMiniCParser {
     pub fn parse_statement(pair: Pair<Rule>) -> Result<Statement, String> {
         match pair.as_rule() {
             Rule::expression => {
-                let exp = Self::parse_expression(pair);
-                if exp.is_err() {
-                    Result::Err(exp.err().unwrap())
-                } else {
-                    Result::Ok(Statement::Expression(exp.unwrap()))
-                }
+                let exp = Self::parse_expression(pair)?;
+                Result::Ok(Statement::Expression(exp))
             },
             _ => Result::Err(String::from("Could not parse statement")),
         }
@@ -94,22 +80,16 @@ impl MyMiniCParser {
             Rule::expression => {
                 let mut pairs = pair.into_inner();
                 let atom_pair = pairs.next().unwrap();
-                let atom = Self::parse_atom(atom_pair.into_inner().next().unwrap());
-                let mut expr_tail = Result::Ok(ExprTail::None);
+                let atom = Self::parse_atom(atom_pair.into_inner().next().unwrap())?;
+                let mut expr_tail = ExprTail::None;
                 if pairs.next().is_some() {
                     let expr_tail_pair = pairs.next().unwrap();
-                    expr_tail = Self::parse_expr_tail(expr_tail_pair);
+                    expr_tail = Self::parse_expr_tail(expr_tail_pair)?;
                 }
-                if atom.is_err() {
-                    Result::Err(atom.err().unwrap())
-                } else if expr_tail.is_err() {
-                    Result::Err(expr_tail.err().unwrap())
-                } else {
-                    Result::Ok(Expression {
-                        atom: atom.unwrap(),
-                        tail: expr_tail.unwrap(),
-                    })
-                }
+                Result::Ok(Expression {
+                    atom: atom,
+                    tail: expr_tail,
+                })
             },
             _ => Result::Err(String::from("Could not parse expression")),
         }
@@ -154,52 +134,40 @@ impl MyMiniCParser {
                             // Silent rule for the args, so last item will be the next tail
                             // Convert to Vec for easier handling
                             let mut items: Vec<Pair<'_, Rule>> = pairs.collect();
-                            let next_tail = Self::parse_expr_tail(items.pop().unwrap());
-                            if next_tail.is_err() {
-                                return Result::Err(next_tail.err().unwrap());
-                            }
+                            let next_tail = Self::parse_expr_tail(items.pop().unwrap())?;
                             let mut args: Vec<Expression> = Vec::new();
                             for arg in items {
-                                let parsed_arg = Self::parse_expression(arg);
-                                if parsed_arg.is_err() {
-                                    return Result::Err(parsed_arg.err().unwrap());
-                                }
-                                args.push(parsed_arg.ok().unwrap());
+                                let parsed_arg = Self::parse_expression(arg)?;
+                                args.push(parsed_arg);
                             }
                             Result::Ok(
                                 ExprTail::Call {
                                     body: args,
-                                    next: Box::new(next_tail.unwrap()),
+                                    next: Box::new(next_tail),
                                 }
                             )
                         },
                         Rule::memberAccessTail => {
                             let mut pairs = tail_pair.into_inner();
                             let member = String::from(pairs.next().unwrap().as_str());
-                            let next_tail = Self::parse_expr_tail(pairs.next().unwrap());
-                            if next_tail.is_err() {
-                                return Result::Err(next_tail.err().unwrap());
-                            }
+                            let next_tail = Self::parse_expr_tail(pairs.next().unwrap())?;
 
                             Result::Ok(
                                 ExprTail::MemberAccess {
                                     member: member,
-                                    next: Box::new(next_tail.unwrap()),
+                                    next: Box::new(next_tail),
                                 }
                             )
                         },
                         Rule::pointerAccessTail => {
                             let mut pairs = tail_pair.into_inner();
                             let member = String::from(pairs.next().unwrap().as_str());
-                            let next_tail = Self::parse_expr_tail(pairs.next().unwrap());
-                            if next_tail.is_err() {
-                                return Result::Err(next_tail.err().unwrap());
-                            }
+                            let next_tail = Self::parse_expr_tail(pairs.next().unwrap())?;
 
                             Result::Ok(
                                 ExprTail::PointerAccess {
                                     member: member,
-                                    next: Box::new(next_tail.unwrap()),
+                                    next: Box::new(next_tail),
                                 }
                             )
                         },
