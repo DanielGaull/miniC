@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, ExprTail, Expression}, statement::Statement};
+use super::ast::{expression::{Atom, ExprTail, Expression}, statement::Statement, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -14,6 +14,35 @@ pub struct MyMiniCParser {}
 impl MyMiniCParser {
     pub fn parse_file(filepath: String) {
 
+    }
+
+    pub fn parse_top_level(pair: Pair<Rule>) -> Result<TopLevel, String> {
+        match pair.as_rule() {
+            Rule::varDec => {
+                let mut pairs = pair.into_inner();
+                let typ = Self::parse_type(pairs.next().unwrap());
+                if typ.is_err() {
+                    return Result::Err(typ.err().unwrap());
+                }
+                let name = pairs.next().unwrap().as_str();
+                let mut init_val: Option<Expression> = None;
+                if let Some(expr_pair) = pairs.next() {
+                    let result = Self::parse_expression(expr_pair);
+                    if result.is_err() {
+                        return Result::Err(result.err().unwrap());
+                    }
+                    init_val = Some(result.unwrap());
+                }
+                Result::Ok(
+                    TopLevel::VarDeclaration { 
+                        typ: typ.unwrap(),
+                        name: String::from(name),
+                        right: init_val,
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Could not parse top-level")),
+        }
     }
 
     pub fn parse_statement(pair: Pair<Rule>) -> Result<Statement, String> {
@@ -152,6 +181,24 @@ impl MyMiniCParser {
                 }
             },
             _ => Result::Err(String::from("Could not parse expression tail")),
+        }
+    }
+
+    fn parse_type(pair: Pair<Rule>) -> Result<Type, String> {
+        match pair.as_rule() {
+            Rule::typ => {
+                let is_struct = pair.as_str().starts_with("struct");
+                let is_ptr = pair.as_str().ends_with("*");
+                let name = pair.into_inner().next().unwrap().as_str();
+                Result::Ok(
+                    Type {
+                        is_struct: is_struct,
+                        is_pointer: is_ptr,
+                        name: String::from(name),
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Could not parse type")),
         }
     }
 }

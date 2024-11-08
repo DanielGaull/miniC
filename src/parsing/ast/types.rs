@@ -1,9 +1,9 @@
 use crate::codegen::simple::SimpleCodeGen;
 
 pub struct Type {
-    is_struct: bool,
-    name: String,
-    is_pointer: bool
+    pub is_struct: bool,
+    pub name: String,
+    pub is_pointer: bool
 }
 
 impl SimpleCodeGen for Type {
