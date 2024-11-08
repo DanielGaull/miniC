@@ -7,6 +7,12 @@ pub struct CodeGenerator {
 }
 
 impl CodeGenerator {
+    pub fn new() -> Self {
+        CodeGenerator {
+            
+        }
+    }
+
     pub fn code_gen(&mut self, program: Program) -> String {
         let mut s = String::new();
 
