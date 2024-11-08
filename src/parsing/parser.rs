@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, ExprTail, Expression}, statement::Statement, toplevel::TopLevel, types::Type};
+use super::ast::{expression::{Atom, ExprTail, Expression}, program::Program, statement::Statement, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -12,11 +12,41 @@ struct MiniCParser;
 pub struct MyMiniCParser {}
 
 impl MyMiniCParser {
-    pub fn parse_file(filepath: String) {
-
+    pub fn parse_file(filepath: String) -> Result<Program, String> {
+        let unparsed_file = fs::read_to_string(filepath).expect("cannot read file");
+        let main_pair = MiniCParser::parse(Rule::program, &unparsed_file)
+            .expect("unsuccessful parse")
+            .next().unwrap();
+        Self::parse_main(main_pair)
     }
 
-    pub fn parse_top_level(pair: Pair<Rule>) -> Result<TopLevel, String> {
+    fn parse_main(pair: Pair<Rule>) -> Result<Program, String> {
+        match pair.as_rule() {
+            Rule::program => {
+                let mut statements = Vec::<TopLevel>::new();
+                for p in pair.into_inner() {
+                    match p.as_rule() {
+                        Rule::topLevel => {
+                            let parsed = Self::parse_top_level(p.into_inner().next().unwrap());
+                            if parsed.is_err() {
+                                return Result::Err(parsed.err().unwrap());
+                            }
+                            statements.push(parsed.unwrap());
+                        }
+                        _ => return Result::Err(String::from("Could not parse top-level statement")),
+                    }
+                }
+                Result::Ok(
+                    Program {
+                        statements: statements
+                    }
+                )
+            },
+            _ => panic!("Error: program type currently not supported"),
+        }
+    }
+
+    fn parse_top_level(pair: Pair<Rule>) -> Result<TopLevel, String> {
         match pair.as_rule() {
             Rule::varDec => {
                 let mut pairs = pair.into_inner();
