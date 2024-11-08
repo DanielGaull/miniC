@@ -55,7 +55,9 @@ arithLogicBinOp = { "+" | "-" | "*" | "/" | "%" | "&" | "|" | "&&" | "||" | "<<"
 binOp = _{ arithLogicBinOp | "==" | "!=" | ">" | "<" | ">=" | "<=" }
 
 exprList = _{ (expression ~ ",")* ~ expression? }
-paramList = _{ (typ ~ identifier ~ ",")* ~ typ ~ identifier }
+
+parameter = { typ ~ identifier }
+paramList = { (parameter ~ ",")* ~ parameter }
 
 identExpr = { identifier | ("*" ~ expression) }
 

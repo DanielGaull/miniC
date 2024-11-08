@@ -1,6 +1,6 @@
 use crate::codegen::simple::SimpleCodeGen;
 
-use super::{expression::Expression, types::Type};
+use super::{expression::Expression, function::Function, types::Type};
 
 pub enum TopLevel {
     VarDeclaration {
@@ -12,6 +12,7 @@ pub enum TopLevel {
         name: String,
         is_lib: bool,
     },
+    Function(Function),
 }
 impl SimpleCodeGen for TopLevel {
     fn generate(&self) -> String {
@@ -43,6 +44,7 @@ impl SimpleCodeGen for TopLevel {
                 s.push_str(";");
                 s
             },
+            TopLevel::Function(func) => func.generate(),
         }
     }
 }

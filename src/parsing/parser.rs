@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, program::Program, statement::Statement, toplevel::TopLevel, types::Type};
+use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, function::{Function, Parameter}, program::Program, statement::Statement, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -62,6 +62,12 @@ impl MyMiniCParser {
                         name: String::from(name),
                         right: init_val,
                     }
+                )
+            },
+            Rule::function => {
+                let func = Self::parse_function(pair)?;
+                Result::Ok(
+                    TopLevel::Function(func),
                 )
             },
             _ => Result::Err(String::from("Could not parse top-level")),
@@ -199,7 +205,6 @@ impl MyMiniCParser {
                                 }
                             )
                         },
-                        // TODO: index
                         _ => Result::Err(String::from("Could not parse expression tail")),
                     }
                 } else {
@@ -225,6 +230,54 @@ impl MyMiniCParser {
                 )
             },
             _ => Result::Err(String::from("Could not parse type")),
+        }
+    }
+
+    fn parse_function(pair: Pair<Rule>) -> Result<Function, String> {
+        match pair.as_rule() {
+            Rule::function => {
+                let mut pairs = pair.into_inner();
+                let typ = Self::parse_type(pairs.next().unwrap())?;
+                let name = String::from(pairs.next().unwrap().as_str());
+                let mut params = Vec::<Parameter>::new();
+                let param_list_pair = pairs.next().unwrap().into_inner();
+                for param in param_list_pair {
+                    params.push(Self::parse_parameter(param)?);
+                }
+
+                let mut statements = Vec::<Statement>::new();
+                for stmt in pairs {
+                    // Should all be statements
+                    statements.push(Self::parse_statement(stmt)?);
+                }
+                
+                Result::Ok(
+                    Function {
+                        return_type: typ,
+                        name: name,
+                        params: params,
+                        body: statements,
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Could not parse function")),
+        }
+    }
+
+    fn parse_parameter(pair: Pair<Rule>) -> Result<Parameter, String> {
+        match pair.as_rule() {
+            Rule::parameter => {
+                let mut pairs = pair.into_inner();
+                let typ = Self::parse_type(pairs.next().unwrap())?;
+                let name = pairs.next().unwrap().as_str();
+                Result::Ok(
+                    Parameter {
+                        typ: typ,
+                        name: String::from(name),
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Could not parse parameter")),
         }
     }
 
