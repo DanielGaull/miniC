@@ -18,7 +18,7 @@ typedef = { "typedef" ~ (struct | typ) ~ identifier }
 import = { "#import" ~ string }
 
 // == Core statements ==
-statement = { (rreturn | varDec | varAssign | binOpVarAssign | expression) ~ ";" }
+statement = { (varDec | varAssign | binOpVarAssign | rreturn | expression) ~ ";" }
 varAssign = { identExpr ~ "=" ~ expression }
 varDec = { typ ~ identifier ~ ("=" ~ expression)? }
 binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
@@ -29,7 +29,10 @@ atom = { int | long | double | float | boolean | string | reference | identifier
 exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | "" }
 expression = { atom ~ exprTail }
 
-identifier = ${ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+// This setup allows us to require that idenifiers can only start with keywords if
+// there are additional characters after
+keyword = _{ "return" | "struct" | "true" | "false" | "typedef" }
+identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 reference = ${ "&" ~ identifier }
 
