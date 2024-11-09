@@ -36,7 +36,7 @@ identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 reference = ${ "&" ~ identifier }
 
-typ = { "struct"? ~ identifier ~ "*"? }
+typ = { "struct"? ~ identifier ~ "*"* }
 
 //char = @{ "'" ~ ANY ~ "'" }
 int = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ }

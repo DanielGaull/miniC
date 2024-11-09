@@ -1,4 +1,4 @@
-int test(int arg) {
+int test(int** arg) {
     return arg+1;
 }
 

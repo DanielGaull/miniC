@@ -243,12 +243,12 @@ impl MyMiniCParser {
         match pair.as_rule() {
             Rule::typ => {
                 let is_struct = pair.as_str().starts_with("struct");
-                let is_ptr = pair.as_str().ends_with("*");
+                let pointer_layers = pair.as_str().chars().filter(|c| *c == '*').count();
                 let name = pair.into_inner().next().unwrap().as_str();
                 Result::Ok(
                     Type {
                         is_struct: is_struct,
-                        is_pointer: is_ptr,
+                        pointer_layers: pointer_layers,
                         name: String::from(name),
                     }
                 )
