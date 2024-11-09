@@ -80,6 +80,30 @@ impl MyMiniCParser {
                 let exp = Self::parse_expression(pair)?;
                 Result::Ok(Statement::Expression(exp))
             },
+            Rule::varDec => {
+                let mut pairs = pair.into_inner();
+                let typ = Self::parse_type(pairs.next().unwrap())?;
+                let name = pairs.next().unwrap().as_str();
+                let mut init_val: Option<Expression> = None;
+                if let Some(expr_pair) = pairs.next() {
+                    let result = Self::parse_expression(expr_pair)?;
+                    init_val = Some(result);
+                }
+                Result::Ok(
+                    Statement::VarDec { 
+                        typ: typ,
+                        name: String::from(name),
+                        right: init_val,
+                    }
+                )
+            },
+            Rule::rreturn => {
+                let mut pairs = pair.into_inner();
+                let expr = Self::parse_expression(pairs.next().unwrap())?;
+                Result::Ok(
+                    Statement::Return(expr),
+                )
+            },
             _ => Result::Err(String::from("Could not parse statement")),
         }
     }
@@ -248,7 +272,7 @@ impl MyMiniCParser {
                 let mut statements = Vec::<Statement>::new();
                 for stmt in pairs {
                     // Should all be statements
-                    statements.push(Self::parse_statement(stmt)?);
+                    statements.push(Self::parse_statement(stmt.into_inner().next().unwrap())?);
                 }
                 
                 Result::Ok(

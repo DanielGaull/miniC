@@ -18,7 +18,7 @@ impl SimpleCodeGen for Function {
         s.push_str(self.params.iter().map(|p| p.generate()).collect::<Vec<String>>().join(", ").as_str());
         s.push_str(") {\n");
         for statement in &self.body {
-            s.push_str("\t");
+            s.push_str("    ");
             s.push_str(statement.generate().as_str());
             s.push_str("\n");
         }
@@ -33,6 +33,10 @@ pub struct Parameter {
 }
 impl SimpleCodeGen for Parameter {
     fn generate(&self) -> String {
-        todo!()
+        let mut s = String::new();
+        s.push_str(self.typ.generate().as_str());
+        s.push_str(" ");
+        s.push_str(self.name.as_str());
+        s
     }
 }
