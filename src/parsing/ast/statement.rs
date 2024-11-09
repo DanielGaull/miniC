@@ -1,4 +1,4 @@
-use crate::codegen::simple::SimpleCodeGen;
+use crate::codegen::simple::{SimpleCodeGen, IndentCodeGen};
 
 use super::{expression::{BinOp, Expression}, types::Type};
 
@@ -38,9 +38,12 @@ pub enum Statement {
         body: Vec<Statement>,
     },
 }
-impl SimpleCodeGen for Statement {
-    fn generate(&self) -> String {
+impl IndentCodeGen for Statement {
+    fn generate(&self, indent_level: usize) -> String {
         let mut s = String::new();
+        for _i in 0..indent_level {
+            s.push_str("    ");
+        }
         let mut has_semicolon = true;
         match self {
             Statement::Expression(expr) => s.push_str(expr.generate().as_str()),
@@ -76,7 +79,7 @@ impl SimpleCodeGen for Statement {
                 s.push_str(") {\n");
                 for line in body {
                     s.push_str("    ");
-                    s.push_str(line.generate().as_str());
+                    s.push_str(line.generate(indent_level + 1).as_str());
                     s.push_str("\n");
                 }
                 s.push_str("}\n");
@@ -87,8 +90,7 @@ impl SimpleCodeGen for Statement {
                 s.push_str(condition.generate().as_str());
                 s.push_str(") {\n");
                 for line in body {
-                    s.push_str("    ");
-                    s.push_str(line.generate().as_str());
+                    s.push_str(line.generate(indent_level + 1).as_str());
                     s.push_str("\n");
                 }
                 s.push_str("}\n");
@@ -96,8 +98,7 @@ impl SimpleCodeGen for Statement {
             Statement::DoWhile { condition, body } => {
                 s.push_str("do {\n");
                 for line in body {
-                    s.push_str("    ");
-                    s.push_str(line.generate().as_str());
+                    s.push_str(line.generate(indent_level + 1).as_str());
                     s.push_str("\n");
                 }
                 s.push_str("} while (");
@@ -106,16 +107,15 @@ impl SimpleCodeGen for Statement {
             },
             Statement::For { init, condition, increment, body } => {
                 s.push_str("for (");
-                s.push_str(init.generate().as_str());
+                s.push_str(init.generate(indent_level).as_str());
                 s.push_str(condition.generate().as_str());
                 s.push_str(";");
-                let generated = increment.generate();
+                let generated = increment.generate(indent_level);
                 let inc = generated.as_str();
                 s.push_str(&inc[..inc.len() - 1]);
                 s.push_str(") {\n");
                 for line in body {
-                    s.push_str("    ");
-                    s.push_str(line.generate().as_str());
+                    s.push_str(line.generate(indent_level + 1).as_str());
                     s.push_str("\n");
                 }
                 s.push_str("}\n");

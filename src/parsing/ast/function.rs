@@ -1,4 +1,4 @@
-use crate::codegen::simple::SimpleCodeGen;
+use crate::codegen::simple::{SimpleCodeGen, IndentCodeGen};
 
 use super::{statement::Statement, types::Type};
 
@@ -8,8 +8,8 @@ pub struct Function {
     pub params: Vec<Parameter>,
     pub body: Vec<Statement>,
 }
-impl SimpleCodeGen for Function {
-    fn generate(&self) -> String {
+impl IndentCodeGen for Function {
+    fn generate(&self, indent: usize) -> String {
         let mut s = String::new();
         s.push_str(self.return_type.generate().as_str());
         s.push_str(" ");
@@ -19,7 +19,7 @@ impl SimpleCodeGen for Function {
         s.push_str(") {\n");
         for statement in &self.body {
             s.push_str("    ");
-            s.push_str(statement.generate().as_str());
+            s.push_str(statement.generate(indent + 1).as_str());
             s.push_str("\n");
         }
         s.push_str("}\n");
