@@ -1,5 +1,7 @@
 use crate::codegen::simple::SimpleCodeGen;
 
+use super::types::Type;
+
 pub enum Atom {
     Char(u8),
     Short(i16),
@@ -11,6 +13,10 @@ pub enum Atom {
     String(String),
     Reference(String),
     Identifier(String),
+    TypeCast {
+        typ: Type,
+        value: Box<Expression>,
+    },
 }
 impl SimpleCodeGen for Atom {
     fn generate(&self) -> String {
@@ -57,6 +63,14 @@ impl SimpleCodeGen for Atom {
                 s
             },
             Atom::Identifier(ident) => ident.clone(),
+            Atom::TypeCast { typ, value } => {
+                let mut s = String::new();
+                s.push_str("(");
+                s.push_str(typ.generate().as_str());
+                s.push_str(")");
+                s.push_str(value.generate().as_str());
+                s
+            }
         }
     }
 }

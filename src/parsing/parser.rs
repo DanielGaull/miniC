@@ -154,6 +154,14 @@ impl MyMiniCParser {
             Rule::string => Result::Ok(Atom::String(String::from(pair.into_inner().next().unwrap().as_str()))),
             Rule::reference => Result::Ok(Atom::Reference(String::from(pair.into_inner().next().unwrap().as_str()))),
             Rule::identifier => Result::Ok(Atom::Identifier(String::from(pair.as_str()))),
+            Rule::typeCast => {
+                let mut pairs = pair.into_inner();
+                let typ = Self::parse_type(pairs.next().unwrap())?;
+                let expr = Self::parse_expression(pairs.next().unwrap())?;
+                Result::Ok(
+                    Atom::TypeCast { typ: typ, value: Box::new(expr) }
+                )
+            },
             _ => Result::Err(String::from("Could not parse atom")),
         }
     }
