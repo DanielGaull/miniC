@@ -7,7 +7,7 @@ program = { SOI ~ topLevel* ~ EOI }
 topLevel = { function | import | topLevelWithSemicolon }
 topLevelWithSemicolon = _{ (varDec | typedef | struct) ~ ";" }
 
-function = { typ ~ identifier ~ "(" ~ paramList ~ ")" ~ "{" ~ statement* ~ "}" }
+function = { typ ~ identifier ~ "(" ~ paramList? ~ ")" ~ "{" ~ statement* ~ "}" }
 
 struct = { "struct" ~ identifier ~ "{" ~ structInner* ~ "}" }
 structInner = _{ structVarDec }
@@ -18,12 +18,13 @@ typedef = { "typedef" ~ (struct | typ) ~ identifier }
 import = { "#import" ~ string }
 
 // == Core statements ==
-statementWithoutSemicolon = _{ varDec | varAssign | binOpVarAssign | rreturn | expression }
-statement = { statementWithoutSemicolon ~ ";" }
+statementWithoutSemicolon = _{ varDec | varAssign | binOpVarAssign | return | expression }
+bigStatement = _{ if | while | for | doWhile }
+statement = { (statementWithoutSemicolon ~ ";") | bigStatement }
 varAssign = { identExpr ~ "=" ~ expression }
 varDec = { typ ~ identifier ~ ("=" ~ expression)? }
 binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
-rreturn = { "return" ~ expression }
+return = { "return" ~ expression }
 
 if = { "if" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
 while = { "while" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
@@ -63,14 +64,15 @@ strchar = {
 
 // Other utils
 arithLogicBinOp = { "+" | "-" | "*" | "/" | "%" | "&" | "|" | "&&" | "||" | "<<" | ">>" }
-binOp = _{ arithLogicBinOp | "==" | "!=" | ">" | "<" | ">=" | "<=" }
+binOp = { "+" | "-" | "*" | "/" | "%" | "&" | "|" | "&&" | "||" | "<<" | ">>" | "==" | "!=" | ">" | "<" | ">=" | "<=" }
 
 exprList = _{ (expression ~ ",")* ~ expression? }
 
 parameter = { typ ~ identifier }
 paramList = { (parameter ~ ",")* ~ parameter }
 
-identExpr = { identifier | ("*" ~ expression) }
+pointerIdent = { "*" ~ expression }
+identExpr = { identifier | pointerIdent }
 
 // Tails
 binaryOperationTail = { binOp ~ expression ~ exprTail }

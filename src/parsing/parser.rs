@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::Statement, toplevel::TopLevel, types::Type};
+use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -22,6 +22,7 @@ impl MyMiniCParser {
 
     fn parse_main(pair: Pair<Rule>) -> Result<Program, String> {
         let rule = pair.as_rule();
+        println!("{}\n\n", pair);
         match rule {
             Rule::program => {
                 let mut statements = Vec::<TopLevel>::new();
@@ -103,12 +104,38 @@ impl MyMiniCParser {
                     }
                 )
             },
-            Rule::rreturn => {
+            Rule::r#return => {
                 let mut pairs = pair.into_inner();
                 let expr = Self::parse_expression(pairs.next().unwrap())?;
                 Result::Ok(
                     Statement::Return(expr),
                 )
+            },
+            Rule::varAssign => {
+                let mut pairs = pair.into_inner();
+                let ident = Self::parse_identifier_expr(pairs.next().unwrap())?;
+                let expr = Self::parse_expression(pairs.next().unwrap())?;
+                Result::Ok(
+                    Statement::VarAssign { identifier: ident, right: expr }
+                )
+            },
+            Rule::binOpVarAssign => {
+                let mut pairs = pair.into_inner();
+                let ident = Self::parse_identifier_expr(pairs.next().unwrap())?;
+                let binop = Self::parse_binop(String::from(pairs.next().unwrap().as_str()))?;
+                let expr = Self::parse_expression(pairs.next().unwrap())?;
+                Result::Ok(
+                    Statement::BinOpVarAssign { identifier: ident, op: binop, right: expr }
+                )
+            },
+            Rule::r#if => {
+                let mut pairs = pair.into_inner();
+                let cond = Self::parse_expression(pairs.next().unwrap())?;
+                let mut body = Vec::<Statement>::new();
+                for p in pairs {
+                    body.push(Self::parse_statement(p.into_inner().next().unwrap())?);
+                }
+                Result::Ok(Statement::If { condition: cond, body: body })
             },
             _ => Result::Err(String::from("Could not parse statement")),
         }
@@ -278,13 +305,24 @@ impl MyMiniCParser {
                 let typ = Self::parse_type(pairs.next().unwrap())?;
                 let name = String::from(pairs.next().unwrap().as_str());
                 let mut params = Vec::<Parameter>::new();
-                let param_list_pair = pairs.next().unwrap().into_inner();
-                for param in param_list_pair {
-                    params.push(Self::parse_parameter(param)?);
-                }
+                let statement_iterator = 
+                    if let Some(next) = pairs.next() {
+                        match next.as_rule() {
+                            Rule::paramList => {
+                                let param_list_pair = next.into_inner();
+                                for param in param_list_pair {
+                                    params.push(Self::parse_parameter(param)?);
+                                }
+                                None.into_iter().chain(pairs)
+                            }
+                            _ => Some(next).into_iter().chain(pairs),
+                        }
+                    } else {
+                        None.into_iter().chain(pairs)
+                    };
 
                 let mut statements = Vec::<Statement>::new();
-                for stmt in pairs {
+                for stmt in statement_iterator {
                     // Should all be statements
                     statements.push(Self::parse_statement(stmt.into_inner().next().unwrap())?);
                 }
@@ -348,6 +386,32 @@ impl MyMiniCParser {
                 )
             },
             _ => Result::Err(String::from("Could not parse struct")),
+        }
+    }
+
+    fn parse_identifier_expr(pair: Pair<Rule>) -> Result<IdentifierExpression, String> {
+        match pair.as_rule() {
+            Rule::identExpr => {
+                if let Some(in_pair) = pair.into_inner().next() {
+                    match in_pair.as_rule() {
+                        Rule::identifier => 
+                            Result::Ok(
+                                IdentifierExpression::Standard(String::from(in_pair.as_str()))
+                            ),
+                        Rule::pointerIdent => {
+                            Result::Ok(
+                                IdentifierExpression::Pointer(
+                                    Self::parse_expression(in_pair.into_inner().next().unwrap())?
+                                )
+                            )
+                        }
+                        _ => Result::Err(String::from("Could not parse identifier expression"))
+                    }
+                } else {
+                    Result::Err(String::from("Could not parse identifier expression"))
+                }
+            },
+            _ => Result::Err(String::from("Could not parse identifier expression")),
         }
     }
 
