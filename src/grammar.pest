@@ -4,13 +4,13 @@ WHITESPACE = _{ " " | "\n" | "\t" | "\r" }
 program = { SOI ~ topLevel* ~ EOI }
 
 // == Top-level stuff ==
-topLevel = { function | struct | import | topLevelWithSemicolon }
-topLevelWithSemicolon = _{ (varDec | typedef) ~ ";" }
+topLevel = { function | import | topLevelWithSemicolon }
+topLevelWithSemicolon = _{ (varDec | typedef | struct) ~ ";" }
 
 function = { typ ~ identifier ~ "(" ~ paramList ~ ")" ~ "{" ~ statement* ~ "}" }
 
-struct = { "struct" ~ identifier ~ "{" ~ structInner ~ "}" }
-structInner = { structVarDec }
+struct = { "struct" ~ identifier ~ "{" ~ structInner* ~ "}" }
+structInner = _{ structVarDec }
 structVarDec = { typ ~ identifier ~ ";" }
 
 typedef = { "typedef" ~ (struct | typ) ~ identifier }

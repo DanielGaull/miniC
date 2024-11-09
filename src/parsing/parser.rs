@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, function::{Function, Parameter}, program::Program, statement::Statement, toplevel::TopLevel, types::Type};
+use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::Statement, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -68,6 +68,12 @@ impl MyMiniCParser {
                 let func = Self::parse_function(pair)?;
                 Result::Ok(
                     TopLevel::Function(func),
+                )
+            },
+            Rule::r#struct => {
+                let struc = Self::parse_struct(pair)?;
+                Result::Ok(
+                    TopLevel::Struct(struc),
                 )
             },
             _ => Result::Err(String::from("Could not parse top-level")),
@@ -310,6 +316,38 @@ impl MyMiniCParser {
                 )
             },
             _ => Result::Err(String::from("Could not parse parameter")),
+        }
+    }
+
+    fn parse_struct(pair: Pair<Rule>) -> Result<Struct, String> {
+        match pair.as_rule() {
+            Rule::r#struct => {
+                let mut pairs = pair.into_inner();
+                let name = pairs.next().unwrap().as_str();
+                let mut fields = Vec::<StructField>::new();
+                for p in pairs {
+                    match p.as_rule() {
+                        Rule::structVarDec => {
+                            let mut ppairs = p.into_inner();
+                            let ftyp = Self::parse_type(ppairs.next().unwrap())?;
+                            let fname = ppairs.next().unwrap().as_str();
+                            fields.push(StructField {
+                                name: String::from(fname),
+                                typ: ftyp,
+                            });
+                        },
+                        _ => return Result::Err(String::from("Could not parse inner value of struct")),
+                    }
+                }
+
+                Result::Ok(
+                    Struct {
+                        name: String::from(name),
+                        fields: fields,
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Could not parse struct")),
         }
     }
 
