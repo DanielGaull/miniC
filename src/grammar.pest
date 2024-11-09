@@ -18,11 +18,17 @@ typedef = { "typedef" ~ (struct | typ) ~ identifier }
 import = { "#import" ~ string }
 
 // == Core statements ==
-statement = { (varDec | varAssign | binOpVarAssign | rreturn | expression) ~ ";" }
+statementWithoutSemicolon = _{ varDec | varAssign | binOpVarAssign | rreturn | expression }
+statement = { statementWithoutSemicolon ~ ";" }
 varAssign = { identExpr ~ "=" ~ expression }
 varDec = { typ ~ identifier ~ ("=" ~ expression)? }
 binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
 rreturn = { "return" ~ expression }
+
+if = { "if" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
+while = { "while" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
+doWhile = { "do" ~ "{" ~ statement* ~ "}" ~ "while" ~ "(" ~ expression ~ ")" }
+for = { "for" ~ "(" ~ statement ~ expression ~ ";" ~ statementWithoutSemicolon ~ ")" ~ "{" ~ statement* ~ "}" }
 
 // == Expressions ==
 atom = { int | long | double | float | boolean | string | reference | typeCast | identifier | "(" ~ expression ~ ")" }
@@ -31,7 +37,7 @@ expression = { atom ~ exprTail }
 
 // This setup allows us to require that idenifiers can only start with keywords if
 // there are additional characters after
-keyword = _{ "return" | "struct" | "true" | "false" | "typedef" }
+keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while" | "for" | "do" }
 identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 reference = ${ "&" ~ identifier }
