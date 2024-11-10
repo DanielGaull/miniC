@@ -22,7 +22,6 @@ impl MyMiniCParser {
 
     fn parse_main(pair: Pair<Rule>) -> Result<Program, String> {
         let rule = pair.as_rule();
-        println!("{}\n\n", pair);
         match rule {
             Rule::program => {
                 let mut statements = Vec::<TopLevel>::new();

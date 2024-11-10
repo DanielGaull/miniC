@@ -41,8 +41,10 @@ pub enum Statement {
 impl IndentCodeGen for Statement {
     fn generate(&self, indent_level: usize) -> String {
         let mut s = String::new();
+        let mut indent_prefix = String::new();
         for _i in 0..indent_level {
             s.push_str("    ");
+            indent_prefix.push_str("    ");
         }
         let mut has_semicolon = true;
         match self {
@@ -77,30 +79,23 @@ impl IndentCodeGen for Statement {
                 s.push_str("if (");
                 s.push_str(condition.generate().as_str());
                 s.push_str(") {\n");
-                for line in body {
-                    s.push_str("    ");
-                    s.push_str(line.generate(indent_level + 1).as_str());
-                    s.push_str("\n");
-                }
-                s.push_str("}\n");
+                s.push_str(self.add_body(body, indent_level + 1).as_str());
+                s.push_str(indent_prefix.as_str());
+                s.push_str("}");
             },
             Statement::While { condition, body } => {
                 has_semicolon = false;
                 s.push_str("while (");
                 s.push_str(condition.generate().as_str());
                 s.push_str(") {\n");
-                for line in body {
-                    s.push_str(line.generate(indent_level + 1).as_str());
-                    s.push_str("\n");
-                }
-                s.push_str("}\n");
+                s.push_str(self.add_body(body, indent_level + 1).as_str());
+                s.push_str(indent_prefix.as_str());
+                s.push_str("}");
             },
             Statement::DoWhile { condition, body } => {
                 s.push_str("do {\n");
-                for line in body {
-                    s.push_str(line.generate(indent_level + 1).as_str());
-                    s.push_str("\n");
-                }
+                s.push_str(&self.add_body(body, indent_level + 1).as_str());
+                s.push_str(indent_prefix.as_str());
                 s.push_str("} while (");
                 s.push_str(condition.generate().as_str());
                 s.push_str(")");
@@ -114,15 +109,24 @@ impl IndentCodeGen for Statement {
                 let inc = generated.as_str();
                 s.push_str(&inc[..inc.len() - 1]);
                 s.push_str(") {\n");
-                for line in body {
-                    s.push_str(line.generate(indent_level + 1).as_str());
-                    s.push_str("\n");
-                }
-                s.push_str("}\n");
+                s.push_str(self.add_body(body, indent_level + 1).as_str());
+                s.push_str(indent_prefix.as_str());
+                s.push_str("}");
             }
         }
         if has_semicolon {
             s.push(';');
+        }
+        s
+    }
+}
+
+impl Statement {
+    fn add_body(&self, body: &Vec<Statement>, indent_level: usize) -> String {
+        let mut s = String::new();
+        for line in body {
+            s.push_str(line.generate(indent_level).as_str());
+            s.push_str("\n");
         }
         s
     }

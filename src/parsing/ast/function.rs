@@ -10,20 +10,31 @@ pub struct Function {
 }
 impl IndentCodeGen for Function {
     fn generate(&self, indent: usize) -> String {
+        let mut lines = Vec::<String>::new();
+
         let mut s = String::new();
         s.push_str(self.return_type.generate().as_str());
         s.push_str(" ");
         s.push_str(self.name.as_str());
         s.push_str("(");
         s.push_str(self.params.iter().map(|p| p.generate()).collect::<Vec<String>>().join(", ").as_str());
-        s.push_str(") {\n");
+        s.push_str(") {");
+        lines.push(s);
+
         for statement in &self.body {
-            s.push_str("    ");
-            s.push_str(statement.generate(indent + 1).as_str());
-            s.push_str("\n");
+            lines.push(statement.generate(indent + 1));
         }
-        s.push_str("}\n");
-        s
+        lines.push(String::from("}"));
+
+        let mut result = String::new();
+        for line in lines {
+            for _i in 0..indent {
+                result.push_str("    ")
+            }
+            result.push_str(line.as_str());
+            result.push_str("\n");
+        }
+        result
     }
 }
 

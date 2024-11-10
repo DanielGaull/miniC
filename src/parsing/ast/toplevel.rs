@@ -1,4 +1,4 @@
-use crate::codegen::simple::SimpleCodeGen;
+use crate::codegen::simple::{IndentCodeGen, SimpleCodeGen};
 
 use super::{expression::Expression, function::Function, sstruct::Struct, types::Type};
 
@@ -45,7 +45,7 @@ impl SimpleCodeGen for TopLevel {
                 s.push_str(";");
                 s
             },
-            TopLevel::Function(func) => func.generate(),
+            TopLevel::Function(func) => func.generate(0),
             TopLevel::Struct(struc) => struc.generate(),
         }
     }
