@@ -127,6 +127,22 @@ impl MyMiniCParser {
                     Statement::BinOpVarAssign { identifier: ident, op: binop, right: expr }
                 )
             },
+            Rule::incDec => {
+                let mut pairs = pair.into_inner();
+                let ident = Self::parse_identifier_expr(pairs.next().unwrap())?;
+                let op = pairs.next().unwrap().as_str();
+                let is_inc: bool;
+                if op == "++" {
+                    is_inc = true;
+                } else if op == "--" {
+                    is_inc = false;
+                } else {
+                    return Result::Err(String::from("Invalid increment/decrement operator (use ++ or --)"));
+                }
+                Result::Ok(
+                    Statement::IncDec { identifier: ident, is_inc: is_inc }
+                )
+            },
             Rule::r#if => {
                 let mut pairs = pair.into_inner();
                 let cond = Self::parse_expression(pairs.next().unwrap())?;

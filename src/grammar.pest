@@ -18,13 +18,16 @@ typedef = { "typedef" ~ (struct | typ) ~ identifier }
 import = { "#import" ~ string }
 
 // == Core statements ==
-statementWithoutSemicolon = _{ varDec | varAssign | binOpVarAssign | return | expression }
+statementWithoutSemicolon = _{ varDec | varAssign | binOpVarAssign | return | expression | incDec }
 bigStatement = _{ if | while | for | doWhile }
 statement = { (statementWithoutSemicolon ~ ";") | bigStatement }
 varAssign = { identExpr ~ "=" ~ expression }
 varDec = { typ ~ identifier ~ ("=" ~ expression)? }
 binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
 return = { "return" ~ expression }
+
+incDecOp = { "++" | "--" }
+incDec = { identExpr ~ incDecOp }
 
 if = { "if" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
 while = { "while" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }

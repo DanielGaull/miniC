@@ -18,6 +18,10 @@ pub enum Statement {
         op: BinOp,
         right: Expression,
     },
+    IncDec {
+        identifier: IdentifierExpression,
+        is_inc: bool,
+    },
     Return(Expression),
     If {
         condition: Expression,
@@ -113,7 +117,15 @@ impl IndentCodeGen for Statement {
                 s.push_str(self.add_body(body, indent_level + 1).as_str());
                 s.push_str(indent_prefix.as_str());
                 s.push_str("}");
-            }
+            },
+            Statement::IncDec { identifier, is_inc } => {
+                s.push_str(identifier.generate().as_str());
+                if *is_inc {
+                    s.push_str("++");
+                } else {
+                    s.push_str("--");
+                }
+            },
         }
         if has_semicolon {
             s.push(';');

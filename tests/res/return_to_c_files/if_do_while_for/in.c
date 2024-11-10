@@ -4,7 +4,7 @@ void main() {
         x += 1;
     }
     int i;
-    for (i = 0; i < 7; i += 1) {
+    for (i = 0; i < 7; i++) {
         x += 1;
     }
     while (i < 10) {
