@@ -3,5 +3,9 @@ void main() {
     if (x==5) {
         x += 1;
     }
+    int i;
+    for (i = 0;i<7;i += 1) {
+        x += 1;
+    }
 }
 

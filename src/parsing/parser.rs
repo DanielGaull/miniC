@@ -136,7 +136,26 @@ impl MyMiniCParser {
                 }
                 Result::Ok(Statement::If { condition: cond, body: body })
             },
-            _ => Result::Err(String::from("Could not parse statement")),
+            Rule::r#for => {
+                let mut pairs = pair.into_inner();
+                let init_stmt = Self::parse_statement(pairs.next().unwrap().into_inner().next().unwrap())?;
+                let cond = Self::parse_expression(pairs.next().unwrap())?;
+                let step_stmt = Self::parse_statement(pairs.next().unwrap())?;
+                let mut body = Vec::<Statement>::new();
+                for p in pairs {
+                    body.push(Self::parse_statement(p.into_inner().next().unwrap())?);
+                }
+                Result::Ok(Statement::For { 
+                    init: Box::new(init_stmt),
+                    condition: cond,
+                    increment: Box::new(step_stmt), 
+                    body: body
+                })
+            },
+            _ => {
+                println!("{}\n\n", pair);
+                Result::Err(String::from("Could not parse statement"))
+            },
         }
     }
 

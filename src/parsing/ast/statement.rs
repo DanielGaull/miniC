@@ -101,11 +101,12 @@ impl IndentCodeGen for Statement {
                 s.push_str(")");
             },
             Statement::For { init, condition, increment, body } => {
+                has_semicolon = false;
                 s.push_str("for (");
-                s.push_str(init.generate(indent_level).as_str());
+                s.push_str(init.generate(0).as_str());
                 s.push_str(condition.generate().as_str());
                 s.push_str(";");
-                let generated = increment.generate(indent_level);
+                let generated = increment.generate(0);
                 let inc = generated.as_str();
                 s.push_str(&inc[..inc.len() - 1]);
                 s.push_str(") {\n");
