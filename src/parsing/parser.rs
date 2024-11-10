@@ -136,6 +136,15 @@ impl MyMiniCParser {
                 }
                 Result::Ok(Statement::If { condition: cond, body: body })
             },
+            Rule::r#while => {
+                let mut pairs = pair.into_inner();
+                let cond = Self::parse_expression(pairs.next().unwrap())?;
+                let mut body = Vec::<Statement>::new();
+                for p in pairs {
+                    body.push(Self::parse_statement(p.into_inner().next().unwrap())?);
+                }
+                Result::Ok(Statement::While { condition: cond, body: body })
+            },
             Rule::r#for => {
                 let mut pairs = pair.into_inner();
                 let init_stmt = Self::parse_statement(pairs.next().unwrap().into_inner().next().unwrap())?;
