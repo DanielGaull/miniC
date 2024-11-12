@@ -88,7 +88,17 @@ impl MyMiniCParser {
             },
             Rule::varDec => {
                 let mut pairs = pair.into_inner();
-                let typ = Self::parse_type(pairs.next().unwrap())?;
+                let mut modifiers = Vec::<String>::new();
+                let mut next = pairs.next().unwrap();
+                loop {
+                    match next.as_rule() {
+                        Rule::varModifier => modifiers.push(String::from(next.as_str())),
+                        _ => break,
+                    }
+                    next = pairs.next().unwrap();
+                }
+
+                let typ = Self::parse_type(next)?;
                 let name = pairs.next().unwrap().as_str();
                 let mut init_val: Option<Expression> = None;
                 if let Some(expr_pair) = pairs.next() {
@@ -100,6 +110,7 @@ impl MyMiniCParser {
                         typ: typ,
                         name: String::from(name),
                         right: init_val,
+                        modifier: modifiers,
                     }
                 )
             },

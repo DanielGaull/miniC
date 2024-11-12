@@ -8,6 +8,7 @@ pub enum Statement {
         typ: Type,
         name: String,
         right: Option<Expression>,
+        modifier: Vec<String>,
     },
     VarAssign {
         identifier: IdentifierExpression,
@@ -53,7 +54,12 @@ impl IndentCodeGen for Statement {
         let mut has_semicolon = true;
         match self {
             Statement::Expression(expr) => s.push_str(expr.generate().as_str()),
-            Statement::VarDec { typ, name, right } => {
+            Statement::VarDec { typ, name, right, modifier } => {
+                for m in modifier {
+                    s.push_str(m.as_str());
+                    s.push_str(" ");
+                }
+
                 s.push_str(typ.generate().as_str());
                 s.push(' ');
                 s.push_str(name.as_str());

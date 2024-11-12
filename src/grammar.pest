@@ -22,9 +22,12 @@ statementWithoutSemicolon = _{ varDec | varAssign | incDec | binOpVarAssign | re
 bigStatement = _{ if | while | for | doWhile }
 statement = { (statementWithoutSemicolon ~ ";") | bigStatement }
 varAssign = { identExpr ~ "=" ~ expression }
-varDec = { typ ~ identifier ~ ("=" ~ expression)? }
 binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
 return = { "return" ~ expression }
+
+varModifier = { "long" | "short" | "signed" | "unsigned" |
+    "static" | "volatile" | "extern" | "const" }
+varDec = { varModifier* ~ typ ~ identifier ~ ("=" ~ expression)? }
 
 incDecOp = { "++" | "--" }
 incDec = { identExpr ~ incDecOp }
@@ -41,7 +44,8 @@ expression = { atom ~ exprTail }
 
 // This setup allows us to require that idenifiers can only start with keywords if
 // there are additional characters after
-keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while" | "for" | "do" }
+keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while" | "for" | "do" |
+    varModifier }
 identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 reference = ${ "&" ~ identifier }
