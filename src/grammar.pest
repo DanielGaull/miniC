@@ -18,7 +18,7 @@ typedef = { "typedef" ~ (struct | typ) ~ identifier }
 import = { "#import" ~ string }
 
 // == Core statements ==
-statementWithoutSemicolon = _{ varDec | varAssign | binOpVarAssign | return | expression | incDec }
+statementWithoutSemicolon = _{ varDec | varAssign | incDec | binOpVarAssign | return | expression }
 bigStatement = _{ if | while | for | doWhile }
 statement = { (statementWithoutSemicolon ~ ";") | bigStatement }
 varAssign = { identExpr ~ "=" ~ expression }
