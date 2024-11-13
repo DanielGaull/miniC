@@ -5,7 +5,7 @@ program = { SOI ~ topLevel* ~ EOI }
 
 // == Top-level stuff ==
 topLevel = { function | import | topLevelWithSemicolon }
-topLevelWithSemicolon = _{ (varDec | typedef | struct) ~ ";" }
+topLevelWithSemicolon = _{ (varDec | typedef | struct | enum) ~ ";" }
 
 function = { typ ~ identifier ~ "(" ~ paramList? ~ ")" ~ "{" ~ statement* ~ "}" }
 
@@ -16,6 +16,9 @@ structVarDec = { typ ~ identifier ~ ";" }
 typedef = { "typedef" ~ (struct | typ) ~ identifier }
 
 import = { "#import" ~ string }
+
+enumEntry = { identifier ~ ("=" ~ int)? }
+enum = { "enum" ~ identifier ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
 
 // == Core statements ==
 statementWithoutSemicolon = _{ varDec | varAssign | incDec | binOpVarAssign | 
@@ -51,7 +54,7 @@ keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while"
     varModifier | "continue" | "break" }
 identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
-typ = { "struct"? ~ identifier ~ "*"* }
+typ = { ("struct" | "enum")? ~ identifier ~ "*"* }
 
 typeCast = { "(" ~ typ ~ ")" ~ expression }
 

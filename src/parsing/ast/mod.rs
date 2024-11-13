@@ -5,3 +5,4 @@ pub mod toplevel;
 pub mod program;
 pub mod function;
 pub mod sstruct;
+pub mod enumm;

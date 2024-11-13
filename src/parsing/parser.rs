@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -74,6 +74,12 @@ impl MyMiniCParser {
                 let struc = Self::parse_struct(pair)?;
                 Result::Ok(
                     TopLevel::Struct(struc),
+                )
+            },
+            Rule::r#enum => {
+                let enumm = Self::parse_enum(pair)?;
+                Result::Ok(
+                    TopLevel::Enum(enumm),
                 )
             },
             _ => Result::Err(String::from("Could not parse top-level")),
@@ -453,6 +459,44 @@ impl MyMiniCParser {
                 )
             },
             _ => Result::Err(String::from("Could not parse struct")),
+        }
+    }
+
+    fn parse_enum(pair: Pair<Rule>) -> Result<Enum, String> {
+        match pair.as_rule() {
+            Rule::r#enum => {
+                let mut pairs = pair.into_inner();
+                let name = pairs.next().unwrap().as_str();
+                let mut entries = Vec::<EnumEntry>::new();
+                for p in pairs {
+                    match p.as_rule() {
+                        Rule::enumEntry => {
+                            let mut ppairs = p.into_inner();
+                            let vname = ppairs.next().unwrap().as_str();
+                            let value: Option<i32>;
+                            if let Some(next) = ppairs.next() {
+                                value = Some(next.as_str().parse::<i32>().unwrap());
+                            } else {
+                                value = None;
+                            }
+                            
+                            entries.push(EnumEntry {
+                                name: String::from(vname),
+                                value: value,
+                            });
+                        },
+                        _ => return Result::Err(String::from("Could not parse inner value of struct")),
+                    }
+                }
+
+                Result::Ok(
+                    Enum {
+                        name: String::from(name),
+                        entries: entries,
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Could not parse enum")),
         }
     }
 
