@@ -42,6 +42,8 @@ pub enum Statement {
         increment: Box<Statement>,
         body: Vec<Statement>,
     },
+    Continue,
+    Break,
 }
 impl IndentCodeGen for Statement {
     fn generate(&self, indent_level: usize) -> String {
@@ -132,6 +134,8 @@ impl IndentCodeGen for Statement {
                     s.push_str("--");
                 }
             },
+            Statement::Continue => s.push_str("continue"),
+            Statement::Break => s.push_str("break"),
         }
         if has_semicolon {
             s.push(';');

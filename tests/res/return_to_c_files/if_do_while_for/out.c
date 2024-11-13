@@ -6,9 +6,11 @@ void main() {
     int i;
     for (i = 0;i<7;i++) {
         x += 1;
+        continue;
     }
     while (i<10) {
         i += 1;
+        break;
     }
 }
 

@@ -188,6 +188,12 @@ impl MyMiniCParser {
                     body: body
                 })
             },
+            Rule::r#continue => {
+                Result::Ok(Statement::Continue)
+            },
+            Rule::r#break => {
+                Result::Ok(Statement::Break)
+            },
             _ => {
                 println!("{}\n\n", pair);
                 Result::Err(String::from("Could not parse statement"))
