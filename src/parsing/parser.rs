@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{expression::{Atom, BinOp, ExprTail, Expression}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
+use super::ast::{expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -239,7 +239,6 @@ impl MyMiniCParser {
                 Result::Ok(Atom::Boolean(value))
             },
             Rule::string => Result::Ok(Atom::String(String::from(pair.into_inner().next().unwrap().as_str()))),
-            Rule::reference => Result::Ok(Atom::Reference(String::from(pair.into_inner().next().unwrap().as_str()))),
             Rule::identifier => Result::Ok(Atom::Identifier(String::from(pair.as_str()))),
             Rule::typeCast => {
                 let mut pairs = pair.into_inner();
@@ -247,6 +246,14 @@ impl MyMiniCParser {
                 let expr = Self::parse_expression(pairs.next().unwrap())?;
                 Result::Ok(
                     Atom::TypeCast { typ: typ, value: Box::new(expr) }
+                )
+            },
+            Rule::unaryOperation => {
+                let mut pairs = pair.into_inner();
+                let op = Self::parse_unary_op(String::from(pairs.next().unwrap().as_str()))?;
+                let expr = Self::parse_expression(pairs.next().unwrap())?;
+                Result::Ok(
+                    Atom::UnaryOperation { op: op, value: Box::new(expr) }
                 )
             },
             _ => Result::Err(String::from("Could not parse atom")),
@@ -484,6 +491,8 @@ impl MyMiniCParser {
             Ok(BinOp::BitAnd)
         } else if op == "|" {
             Ok(BinOp::BitOr)
+        } else if op == "^" {
+            Ok(BinOp::BitXor)
         } else if op == "&&" {
             Ok(BinOp::LogicAnd)
         } else if op == "||" {
@@ -506,6 +515,27 @@ impl MyMiniCParser {
             Ok(BinOp::IsLTE)
         } else {
             let mut msg = String::from("Invalid binary operator: '");
+            msg.push_str(op.as_str());
+            msg.push_str("'");
+            Err(msg)
+        }
+    }
+
+    fn parse_unary_op(op: String) -> Result<UnaryOp, String> {
+        if op == "+" {
+            Ok(UnaryOp::Plus)
+        } else if op == "-" {
+            Ok(UnaryOp::Minus)
+        } else if op == "*" {
+            Ok(UnaryOp::Dereference)
+        } else if op == "&" {
+            Ok(UnaryOp::AddressOf)
+        } else if op == "!" {
+            Ok(UnaryOp::LogicNot)
+        } else if op == "~" {
+            Ok(UnaryOp::BitNot)
+        } else {
+            let mut msg = String::from("Invalid unary operator: '");
             msg.push_str(op.as_str());
             msg.push_str("'");
             Err(msg)

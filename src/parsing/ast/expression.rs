@@ -11,10 +11,13 @@ pub enum Atom {
     Double(f64),
     Boolean(bool),
     String(String),
-    Reference(String),
     Identifier(String),
     TypeCast {
         typ: Type,
+        value: Box<Expression>,
+    },
+    UnaryOperation {
+        op: UnaryOp,
         value: Box<Expression>,
     },
 }
@@ -56,12 +59,6 @@ impl SimpleCodeGen for Atom {
                 s.push_str("\"");
                 s
             },
-            Atom::Reference(ident) => {
-                let mut s = String::new();
-                s.push_str("&");
-                s.push_str(ident.as_str());
-                s
-            },
             Atom::Identifier(ident) => ident.clone(),
             Atom::TypeCast { typ, value } => {
                 let mut s = String::new();
@@ -70,7 +67,13 @@ impl SimpleCodeGen for Atom {
                 s.push_str(")");
                 s.push_str(value.generate().as_str());
                 s
-            }
+            },
+            Atom::UnaryOperation { op, value } => {
+                let mut s = String::new();
+                s.push_str(op.generate().as_str());
+                s.push_str(value.generate().as_str());
+                s
+            },
         }
     }
 }
@@ -161,7 +164,6 @@ impl SimpleCodeGen for Expression {
     }
 }
 
-// TODO: Power operator? (^)
 pub enum BinOp {
     Add,
     Sub,
@@ -172,6 +174,7 @@ pub enum BinOp {
     RightShift,
     BitOr,
     BitAnd,
+    BitXor,
     LogicOr,
     LogicAnd,
     IsEqual,
@@ -193,6 +196,7 @@ impl SimpleCodeGen for BinOp {
             BinOp::RightShift => String::from(">>"),
             BinOp::BitOr => String::from("|"),
             BinOp::BitAnd => String::from("&"),
+            BinOp::BitXor => String::from("^"),
             BinOp::LogicOr => String::from("||"),
             BinOp::LogicAnd => String::from("&&"),
             BinOp::IsEqual => String::from("=="),
@@ -201,6 +205,27 @@ impl SimpleCodeGen for BinOp {
             BinOp::IsLTE => String::from("<="),
             BinOp::IsGT => String::from(">"),
             BinOp::IsGTE => String::from(">="),
+        }
+    }
+}
+
+pub enum UnaryOp {
+    Plus,
+    Minus,
+    BitNot,
+    LogicNot,
+    AddressOf,
+    Dereference,
+}
+impl SimpleCodeGen for UnaryOp {
+    fn generate(&self) -> String {
+        match self {
+            UnaryOp::Plus => String::from("+"),
+            UnaryOp::Minus => String::from("-"),
+            UnaryOp::BitNot => String::from("~"),
+            UnaryOp::LogicNot => String::from("!"),
+            UnaryOp::AddressOf => String::from("&"),
+            UnaryOp::Dereference => String::from("*"),
         }
     }
 }

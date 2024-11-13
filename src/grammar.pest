@@ -38,7 +38,7 @@ doWhile = { "do" ~ "{" ~ statement* ~ "}" ~ "while" ~ "(" ~ expression ~ ")" }
 for = { "for" ~ "(" ~ statement ~ expression ~ ";" ~ statementWithoutSemicolon ~ ")" ~ "{" ~ statement* ~ "}" }
 
 // == Expressions ==
-atom = { int | long | double | float | boolean | string | reference | typeCast | identifier | "(" ~ expression ~ ")" }
+atom = { int | long | double | float | boolean | string | typeCast | unaryOperation | identifier | "(" ~ expression ~ ")" }
 exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | "" }
 expression = { atom ~ exprTail }
 
@@ -47,8 +47,6 @@ expression = { atom ~ exprTail }
 keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while" | "for" | "do" |
     varModifier }
 identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
-
-reference = ${ "&" ~ identifier }
 
 typ = { "struct"? ~ identifier ~ "*"* }
 
@@ -72,6 +70,9 @@ strchar = {
 // Other utils
 arithLogicBinOp = { "+" | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "&&" | "||" | "<<" | ">>" }
 binOp = { "+" | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "&&" | "||" | "<<" | ">>" | "==" | "!=" | ">" | "<" | ">=" | "<=" }
+
+unaryOp = { "+" | "-" | "~" | "!" | "&" | "*" }
+unaryOperation = { unaryOp ~ expression }
 
 exprList = _{ (expression ~ ",")* ~ expression? }
 
