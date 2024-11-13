@@ -6,4 +6,6 @@ void main() {
     y = *z;
     y = +x;
     y = -x;
+    y = ++x;
+    y = --x;
 }

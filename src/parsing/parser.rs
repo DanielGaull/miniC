@@ -534,6 +534,10 @@ impl MyMiniCParser {
             Ok(UnaryOp::LogicNot)
         } else if op == "~" {
             Ok(UnaryOp::BitNot)
+        } else if op == "++" {
+            Ok(UnaryOp::Increment)
+        } else if op == "--" {
+            Ok(UnaryOp::Decrement)
         } else {
             let mut msg = String::from("Invalid unary operator: '");
             msg.push_str(op.as_str());

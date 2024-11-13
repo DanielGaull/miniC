@@ -216,6 +216,8 @@ pub enum UnaryOp {
     LogicNot,
     AddressOf,
     Dereference,
+    Increment,
+    Decrement,
 }
 impl SimpleCodeGen for UnaryOp {
     fn generate(&self) -> String {
@@ -226,6 +228,8 @@ impl SimpleCodeGen for UnaryOp {
             UnaryOp::LogicNot => String::from("!"),
             UnaryOp::AddressOf => String::from("&"),
             UnaryOp::Dereference => String::from("*"),
+            UnaryOp::Increment => String::from("++"),
+            UnaryOp::Decrement => String::from("--"),
         }
     }
 }
