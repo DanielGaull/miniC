@@ -109,6 +109,11 @@ pub enum ExprTail {
         inner: Box<Expression>,
         next: Box<ExprTail>,
     },
+    TernaryConditional {
+        second: Box<Expression>,
+        third: Box<Expression>,
+        next: Box<ExprTail>,
+    },
 }
 impl SimpleCodeGen for ExprTail {
     fn generate(&self) -> String {
@@ -152,6 +157,15 @@ impl SimpleCodeGen for ExprTail {
                 let mut s = String::new();
                 s.push_str("->");
                 s.push_str(member.as_str());
+                s.push_str(next.generate().as_str());
+                s
+            },
+            ExprTail::TernaryConditional { second, third, next } => {
+                let mut s = String::new();
+                s.push_str(" ? ");
+                s.push_str(second.generate().as_str());
+                s.push_str(" : ");
+                s.push_str(third.generate().as_str());
                 s.push_str(next.generate().as_str());
                 s
             },

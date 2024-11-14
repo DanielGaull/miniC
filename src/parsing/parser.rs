@@ -350,6 +350,19 @@ impl MyMiniCParser {
                                 }
                             )
                         },
+                        Rule::ternaryTail => {
+                            let mut pairs = tail_pair.into_inner();
+                            let second = Self::parse_expression(pairs.next().unwrap())?;
+                            let third = Self::parse_expression(pairs.next().unwrap())?;
+                            let next_tail = Self::parse_expr_tail(pairs.next().unwrap())?;
+                            Result::Ok(
+                                ExprTail::TernaryConditional { 
+                                    second: Box::new(second), 
+                                    third: Box::new(third), 
+                                    next: Box::new(next_tail), 
+                                }
+                            )
+                        },
                         _ => Result::Err(String::from("Could not parse expression tail")),
                     }
                 } else {

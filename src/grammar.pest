@@ -46,7 +46,7 @@ for = { "for" ~ "(" ~ statement ~ expression ~ ";" ~ statementWithoutSemicolon ~
 
 // == Expressions ==
 atom = { int | long | double | float | boolean | string | typeCast | unaryOperation | sizeof | identifier | "(" ~ expression ~ ")" }
-exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | "" }
+exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | ternaryTail | "" }
 expression = { atom ~ exprTail }
 
 sizeof = { "sizeof(" ~ typ ~ ")" }
@@ -97,3 +97,4 @@ indexTail = { "[" ~ expression ~ "]" ~ exprTail }
 memberAccessTail = { "." ~ identifier ~ exprTail }
 pointerAccessTail = { "->" ~ identifier ~ exprTail }
 callTail = { "(" ~ exprList ~ ")" ~ exprTail }
+ternaryTail = { "?" ~ expression ~ ":" ~ expression ~ exprTail }
