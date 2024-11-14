@@ -275,6 +275,10 @@ impl MyMiniCParser {
                     Atom::SizeOf(typ)
                 )
             },
+            Rule::expression => {
+                let exp = Self::parse_expression(pair)?;
+                Result::Ok(Atom::Wrapped(Box::new(exp)))
+            },
             _ => Result::Err(String::from("Could not parse atom")),
         }
     }

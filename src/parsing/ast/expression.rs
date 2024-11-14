@@ -21,6 +21,7 @@ pub enum Atom {
         value: Box<Expression>,
     },
     SizeOf(Type),
+    Wrapped(Box<Expression>),
 }
 impl SimpleCodeGen for Atom {
     fn generate(&self) -> String {
@@ -79,6 +80,13 @@ impl SimpleCodeGen for Atom {
                 let mut s = String::new();
                 s.push_str("sizeof(");
                 s.push_str(typ.generate().as_str());
+                s.push_str(")");
+                s
+            },
+            Atom::Wrapped(expr) => {
+                let mut s = String::new();
+                s.push_str("(");
+                s.push_str(expr.generate().as_str());
                 s.push_str(")");
                 s
             },
