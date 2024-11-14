@@ -23,7 +23,7 @@ pub enum Statement {
         identifier: IdentifierExpression,
         is_inc: bool,
     },
-    Return(Expression),
+    Return(Option<Expression>),
     If {
         condition: Expression,
         body: Vec<Statement>,
@@ -83,8 +83,12 @@ impl IndentCodeGen for Statement {
                 s.push_str(right.generate().as_str());
             },
             Statement::Return(expr) => {
-                s.push_str("return ");
-                s.push_str(expr.generate().as_str());
+                if let Some(val) = expr {
+                    s.push_str("return ");
+                    s.push_str(val.generate().as_str());
+                } else {
+                    s.push_str("return");
+                }
             },
             Statement::If { condition, body } => {
                 has_semicolon = false;

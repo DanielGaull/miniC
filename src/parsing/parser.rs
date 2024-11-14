@@ -124,9 +124,10 @@ impl MyMiniCParser {
                 let mut pairs = pair.into_inner();
                 let expr = Self::parse_expression(pairs.next().unwrap())?;
                 Result::Ok(
-                    Statement::Return(expr),
+                    Statement::Return(Some(expr)),
                 )
             },
+            Rule::emptyReturn => Result::Ok(Statement::Return(None)),
             Rule::varAssign => {
                 let mut pairs = pair.into_inner();
                 let ident = Self::parse_identifier_expr(pairs.next().unwrap())?;

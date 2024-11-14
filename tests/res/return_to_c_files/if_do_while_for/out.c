@@ -12,5 +12,6 @@ void main() {
         i += 1;
         break;
     }
+    return;
 }
 
