@@ -268,6 +268,12 @@ impl MyMiniCParser {
                     Atom::UnaryOperation { op: op, value: Box::new(expr) }
                 )
             },
+            Rule::sizeof => {
+                let typ = Self::parse_type(pair.into_inner().next().unwrap())?;
+                Result::Ok(
+                    Atom::SizeOf(typ)
+                )
+            },
             _ => Result::Err(String::from("Could not parse atom")),
         }
     }

@@ -44,9 +44,11 @@ doWhile = { "do" ~ "{" ~ statement* ~ "}" ~ "while" ~ "(" ~ expression ~ ")" }
 for = { "for" ~ "(" ~ statement ~ expression ~ ";" ~ statementWithoutSemicolon ~ ")" ~ "{" ~ statement* ~ "}" }
 
 // == Expressions ==
-atom = { int | long | double | float | boolean | string | typeCast | unaryOperation | identifier | "(" ~ expression ~ ")" }
+atom = { int | long | double | float | boolean | string | typeCast | unaryOperation | sizeof | identifier | "(" ~ expression ~ ")" }
 exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | "" }
 expression = { atom ~ exprTail }
+
+sizeof = { "sizeof(" ~ typ ~ ")" }
 
 // This setup allows us to require that idenifiers can only start with keywords if
 // there are additional characters after
