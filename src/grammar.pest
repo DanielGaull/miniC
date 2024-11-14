@@ -39,8 +39,14 @@ varDec = { varModifier* ~ typ ~ identifier ~ ("=" ~ expression)? }
 incDecOp = { "++" | "--" }
 incDec = { identExpr ~ incDecOp }
 
-if = { "if" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
-while = { "while" ~ "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
+conditionBody = { "(" ~ expression ~ ")" ~ "{" ~ statement* ~ "}" }
+
+if = { "if" ~ conditionBody ~ elseifs ~ else? }
+elseifs = { elseif* }
+elseif = { "else" ~ "if" ~ conditionBody }
+else = { "else" ~ "{" ~ statement* ~ "}" }
+
+while = { "while" ~ conditionBody }
 doWhile = { "do" ~ "{" ~ statement* ~ "}" ~ "while" ~ "(" ~ expression ~ ")" }
 for = { "for" ~ "(" ~ statement ~ expression ~ ";" ~ statementWithoutSemicolon ~ ")" ~ "{" ~ statement* ~ "}" }
 

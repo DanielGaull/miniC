@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -162,22 +162,10 @@ impl MyMiniCParser {
                 )
             },
             Rule::r#if => {
-                let mut pairs = pair.into_inner();
-                let cond = Self::parse_expression(pairs.next().unwrap())?;
-                let mut body = Vec::<Statement>::new();
-                for p in pairs {
-                    body.push(Self::parse_statement(p.into_inner().next().unwrap())?);
-                }
-                Result::Ok(Statement::If { condition: cond, body: body })
+                Self::parse_if_statement(pair)
             },
             Rule::r#while => {
-                let mut pairs = pair.into_inner();
-                let cond = Self::parse_expression(pairs.next().unwrap())?;
-                let mut body = Vec::<Statement>::new();
-                for p in pairs {
-                    body.push(Self::parse_statement(p.into_inner().next().unwrap())?);
-                }
-                Result::Ok(Statement::While { condition: cond, body: body })
+                Result::Ok(Statement::While(Self::parse_cond_body(pair.into_inner().next().unwrap())?))
             },
             Rule::r#for => {
                 let mut pairs = pair.into_inner();
@@ -202,7 +190,6 @@ impl MyMiniCParser {
                 Result::Ok(Statement::Break)
             },
             _ => {
-                println!("{}\n\n", pair);
                 Result::Err(String::from("Could not parse statement"))
             },
         }
@@ -548,6 +535,41 @@ impl MyMiniCParser {
             },
             _ => Result::Err(String::from("Could not parse identifier expression")),
         }
+    }
+
+    fn parse_cond_body(pair: Pair<Rule>) -> Result<ConditionBody, String> {
+        let mut pairs = pair.into_inner();
+        let cond = Self::parse_expression(pairs.next().unwrap())?;
+        let mut body = Vec::<Statement>::new();
+        for p in pairs {
+            body.push(Self::parse_statement(p.into_inner().next().unwrap())?);
+        }
+        Result::Ok(
+            ConditionBody {
+                condition: cond,
+                body: body,
+            }
+        )
+    }
+
+    fn parse_if_statement(pair: Pair<Rule>) -> Result<Statement, String> {
+        let mut pairs = pair.into_inner();
+        let base = Self::parse_cond_body(pairs.next().unwrap())?;
+        let mut elseifs = Vec::<ConditionBody>::new();
+        let elseifs_pairs = pairs.next().unwrap().into_inner();
+        for p in elseifs_pairs {
+            elseifs.push(Self::parse_cond_body(p.into_inner().next().unwrap())?);
+        }
+        let mut els = None;
+        if let Some(els_pair) = pairs.next() {
+            let mut body = Vec::<Statement>::new();
+            for p in els_pair.into_inner() {
+                body.push(Self::parse_statement(p.into_inner().next().unwrap())?);
+            }
+            els = Some(body);
+        }
+
+        Result::Ok(Statement::If { base: base, elseifs: elseifs, tail: els })
     }
 
     fn parse_binop(op: String) -> Result<BinOp, String> {

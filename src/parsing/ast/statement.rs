@@ -2,6 +2,11 @@ use crate::codegen::simple::{SimpleCodeGen, IndentCodeGen};
 
 use super::{expression::{BinOp, Expression}, types::Type};
 
+pub struct ConditionBody {
+    pub condition: Expression,
+    pub body: Vec<Statement>,
+}
+
 pub enum Statement {
     Expression(Expression),
     VarDec {
@@ -25,13 +30,11 @@ pub enum Statement {
     },
     Return(Option<Expression>),
     If {
-        condition: Expression,
-        body: Vec<Statement>,
+        base: ConditionBody,
+        elseifs: Vec<ConditionBody>,
+        tail: Option<Vec<Statement>>,
     },
-    While {
-        condition: Expression,
-        body: Vec<Statement>,
-    },
+    While(ConditionBody),
     DoWhile {
         condition: Expression,
         body: Vec<Statement>,
@@ -90,21 +93,35 @@ impl IndentCodeGen for Statement {
                     s.push_str("return");
                 }
             },
-            Statement::If { condition, body } => {
+            Statement::If { base, elseifs, tail } => {
                 has_semicolon = false;
                 s.push_str("if (");
-                s.push_str(condition.generate().as_str());
+                s.push_str(base.condition.generate().as_str());
                 s.push_str(") {\n");
-                s.push_str(self.add_body(body, indent_level + 1).as_str());
+                s.push_str(self.add_body(&base.body, indent_level + 1).as_str());
                 s.push_str(indent_prefix.as_str());
                 s.push_str("}");
+                for elseif in elseifs {
+                    s.push_str("else if (");
+                    s.push_str(elseif.condition.generate().as_str());
+                    s.push_str(") {\n");
+                    s.push_str(self.add_body(&elseif.body, indent_level + 1).as_str());
+                    s.push_str(indent_prefix.as_str());
+                    s.push_str("}");
+                }
+                if let Some(els) = tail {
+                    s.push_str("else {\n");
+                    s.push_str(self.add_body(&els, indent_level + 1).as_str());
+                    s.push_str(indent_prefix.as_str());
+                    s.push_str("}");
+                }
             },
-            Statement::While { condition, body } => {
+            Statement::While(condition_body) => {
                 has_semicolon = false;
                 s.push_str("while (");
-                s.push_str(condition.generate().as_str());
+                s.push_str(condition_body.condition.generate().as_str());
                 s.push_str(") {\n");
-                s.push_str(self.add_body(body, indent_level + 1).as_str());
+                s.push_str(self.add_body(&condition_body.body, indent_level + 1).as_str());
                 s.push_str(indent_prefix.as_str());
                 s.push_str("}");
             },
