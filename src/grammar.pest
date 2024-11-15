@@ -76,7 +76,7 @@ hybridIdent = { moduleIdent | identifier }
 // This setup allows us to require that idenifiers can only start with keywords if
 // there are additional characters after
 keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while" | "for" | "do" |
-    varModifier | "continue" | "break" | "sizeof" | "module" | "typedef" }
+    varModifier | "continue" | "break" | "sizeof" | "module" | "typedef" | "union" | "enum" }
 identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 typ = { ("struct" | "enum" | "union")? ~ hybridIdent ~ "*"* }
