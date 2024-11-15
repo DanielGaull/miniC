@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type, union::Union};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::{Type, TypeType}, union::Union};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -446,12 +446,19 @@ impl MyMiniCParser {
     fn parse_type(pair: Pair<Rule>) -> Result<Type, String> {
         match pair.as_rule() {
             Rule::typ => {
-                let is_struct = pair.as_str().starts_with("struct");
+                let mut typetype: TypeType = TypeType::Simple;
+                if pair.as_str().starts_with("struct") {
+                    typetype = TypeType::Struct;
+                } else if pair.as_str().starts_with("enum") {
+                    typetype = TypeType::Enum;
+                } else if pair.as_str().starts_with("union") {
+                    typetype = TypeType::Union;
+                }
                 let pointer_layers = pair.as_str().chars().filter(|c| *c == '*').count();
                 let name = Self::parse_identifier(pair.into_inner().next().unwrap())?;
                 Result::Ok(
                     Type {
-                        is_struct: is_struct,
+                        typetype: typetype,
                         pointer_layers: pointer_layers,
                         name: name,
                     }
