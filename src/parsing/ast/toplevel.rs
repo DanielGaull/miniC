@@ -22,6 +22,7 @@ pub enum TopLevel {
         body: Vec<TopLevel>,
     },
     TypeDef(TypeDef),
+    PreprocessorDirective(String), // Just contains everything after the '#'
 }
 impl ModuleMemberCodeGen for TopLevel {
     fn generate(&self, name_prefix: &String) -> String {
@@ -76,6 +77,12 @@ impl ModuleMemberCodeGen for TopLevel {
                 s
             },
             TopLevel::TypeDef(t) => t.generate(name_prefix),
+            TopLevel::PreprocessorDirective(str) => {
+                let mut s = String::new();
+                s.push_str("#");
+                s.push_str(str.as_str());
+                s
+            }
         }
     }
 }

@@ -153,8 +153,15 @@ impl MyMiniCParser {
                     )
                 )
             },
+            Rule::preprocessorDirective => {
+                if pair.as_str().len() < 2 {
+                    Result::Err(String::from("Invalid preprocessor directive"))
+                } else {
+                    let content = String::from(&pair.as_str()[1..]);
+                    Result::Ok(TopLevel::PreprocessorDirective(content))
+                }
+            },
             _ => {
-                println!("\n\n{}\n\n", pair);
                 Result::Err(String::from("Could not parse top-level"))
             },
         }
