@@ -296,6 +296,10 @@ impl MyMiniCParser {
                 let exp = Self::parse_expression(pair)?;
                 Result::Ok(Atom::Wrapped(Box::new(exp)))
             },
+            Rule::r#char => {
+                let c = pair.into_inner().next().unwrap().as_str().as_bytes()[0];
+                Result::Ok(Atom::Char(c))
+            },
             _ => Result::Err(String::from("Could not parse atom")),
         }
     }

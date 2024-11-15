@@ -54,7 +54,7 @@ doWhile = { "do" ~ "{" ~ statement* ~ "}" ~ "while" ~ "(" ~ expression ~ ")" }
 for = { "for" ~ "(" ~ statement ~ expression ~ ";" ~ statementWithoutSemicolon ~ ")" ~ "{" ~ statement* ~ "}" }
 
 // == Expressions ==
-atom = { int | long | double | float | boolean | string | typeCast | unaryOperation | sizeof | identifier | "(" ~ expression ~ ")" }
+atom = { int | long | double | float | boolean | char | string | typeCast | unaryOperation | sizeof | identifier | "(" ~ expression ~ ")" }
 exprTail = { callTail | binaryOperationTail | memberAccessTail | pointerAccessTail | indexTail | ternaryTail | "" }
 expression = { atom ~ exprTail }
 
@@ -70,12 +70,18 @@ typ = { ("struct" | "enum")? ~ identifier ~ "*"* }
 
 typeCast = { "(" ~ typ ~ ")" ~ expression }
 
-//char = @{ "'" ~ ANY ~ "'" }
 int = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ }
 long = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ "L" }
 double = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ "." ~ (ASCII_DIGIT)+ }
 float = @{ ("+" | "-")? ~ (ASCII_DIGIT)+ ~ ("." ~ (ASCII_DIGIT)+)? ~ "f" }
 boolean = { "true" | "false" }
+
+char = { "'" ~ chchar ~ "'" }
+chchar = {
+    !("\'" | "\\") ~ ANY
+    | "\\" ~ ("\'" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
 
 string = ${ "\"" ~ strinner ~ "\"" }
 strinner = @{ strchar* }
