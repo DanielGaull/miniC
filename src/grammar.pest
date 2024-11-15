@@ -7,7 +7,8 @@ program = { SOI ~ topLevel* ~ EOI }
 topLevel = { function | libImport | fileImport | topLevelWithSemicolon }
 topLevelWithSemicolon = _{ (varDec | typedef | struct | enum) ~ ";" }
 
-function = { typ ~ identifier ~ "(" ~ paramList? ~ ")" ~ "{" ~ statement* ~ "}" }
+function = { functionHeader ~ "{" ~ statement* ~ "}" }
+functionHeader = { "extern"? ~ typ ~ identifier ~ "(" ~ paramList? ~ ")" }
 
 struct = { "struct" ~ identifier ~ "{" ~ structInner* ~ "}" }
 structInner = _{ structVarDec }

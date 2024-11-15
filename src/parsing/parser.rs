@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -394,40 +394,47 @@ impl MyMiniCParser {
         }
     }
 
-    fn parse_function(pair: Pair<Rule>) -> Result<Function, String> {
+    fn parse_function_header(pair: Pair<Rule>) -> Result<FunctionHeader, String> {
         match pair.as_rule() {
-            Rule::function => {
+            Rule::functionHeader => {
+                let is_extern = pair.as_str().starts_with("extern");
                 let mut pairs = pair.into_inner();
                 let typ = Self::parse_type(pairs.next().unwrap())?;
                 let name = String::from(pairs.next().unwrap().as_str());
                 let mut params = Vec::<Parameter>::new();
-                let statement_iterator = 
-                    if let Some(next) = pairs.next() {
-                        match next.as_rule() {
-                            Rule::paramList => {
-                                let param_list_pair = next.into_inner();
-                                for param in param_list_pair {
-                                    params.push(Self::parse_parameter(param)?);
-                                }
-                                None.into_iter().chain(pairs)
-                            }
-                            _ => Some(next).into_iter().chain(pairs),
-                        }
-                    } else {
-                        None.into_iter().chain(pairs)
-                    };
+                if let Some(param_list_pairs) = pairs.next() {
+                    for p in param_list_pairs.into_inner() {
+                        params.push(Self::parse_parameter(p)?);
+                    }
+                }
+                
+                Result::Ok(
+                    FunctionHeader {
+                        return_type: typ,
+                        name: name,
+                        params: params,
+                        is_extern: is_extern,
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Cannot parse function header")),
+        }
+    }
+    fn parse_function(pair: Pair<Rule>) -> Result<Function, String> {
+        match pair.as_rule() {
+            Rule::function => {
+                let mut pairs = pair.into_inner();
+                let header = Self::parse_function_header(pairs.next().unwrap())?;
 
                 let mut statements = Vec::<Statement>::new();
-                for stmt in statement_iterator {
+                for stmt in pairs {
                     // Should all be statements
                     statements.push(Self::parse_statement(stmt.into_inner().next().unwrap())?);
                 }
                 
                 Result::Ok(
                     Function {
-                        return_type: typ,
-                        name: name,
-                        params: params,
+                        header: header,
                         body: statements,
                     }
                 )
