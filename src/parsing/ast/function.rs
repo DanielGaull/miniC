@@ -45,7 +45,6 @@ impl ModuleMemberCodeGen for Function {
 
         let mut result = String::new();
         for line in lines {
-            result.push_str("    ");
             result.push_str(line.as_str());
             result.push_str("\n");
         }
