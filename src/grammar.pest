@@ -4,7 +4,7 @@ WHITESPACE = _{ " " | "\n" | "\t" | "\r" }
 program = { SOI ~ topLevel* ~ EOI }
 
 // == Top-level stuff ==
-topLevel = { function | import | topLevelWithSemicolon }
+topLevel = { function | libImport | fileImport | topLevelWithSemicolon }
 topLevelWithSemicolon = _{ (varDec | typedef | struct | enum) ~ ";" }
 
 function = { typ ~ identifier ~ "(" ~ paramList? ~ ")" ~ "{" ~ statement* ~ "}" }
@@ -15,7 +15,9 @@ structVarDec = { typ ~ identifier ~ ";" }
 
 typedef = { "typedef" ~ (struct | typ) ~ identifier }
 
-import = { "#import" ~ string }
+libImport = { "#include" ~ "<" ~ importInner ~ ">" }
+fileImport = { "#include" ~ "\"" ~ importInner ~ "\"" }
+importInner = { ("_" | "/" | "." | "\\" | ASCII_ALPHANUMERIC)+ }
 
 enumEntry = { identifier ~ ("=" ~ int)? }
 enum = { "enum" ~ identifier ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }

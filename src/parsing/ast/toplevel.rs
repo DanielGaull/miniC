@@ -33,7 +33,7 @@ impl SimpleCodeGen for TopLevel {
             },
             TopLevel::Import { name, is_lib } => {
                 let mut s = String::new();
-                s.push_str("#import ");
+                s.push_str("#include ");
                 if *is_lib {
                     s.push_str("<");
                     s.push_str(name.as_str());
@@ -43,7 +43,6 @@ impl SimpleCodeGen for TopLevel {
                     s.push_str(name.as_str());
                     s.push_str("\"");
                 }
-                s.push_str(";");
                 s
             },
             TopLevel::Function(func) => func.generate(0),

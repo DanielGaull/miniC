@@ -82,6 +82,18 @@ impl MyMiniCParser {
                     TopLevel::Enum(enumm),
                 )
             },
+            Rule::libImport => {
+                let path = pair.into_inner().next().unwrap().as_str();
+                Result::Ok(
+                    TopLevel::Import { name: String::from(path), is_lib: true }
+                )
+            },
+            Rule::fileImport => {
+                let path = pair.into_inner().next().unwrap().as_str();
+                Result::Ok(
+                    TopLevel::Import { name: String::from(path), is_lib: false }
+                )
+            },
             _ => Result::Err(String::from("Could not parse top-level")),
         }
     }
