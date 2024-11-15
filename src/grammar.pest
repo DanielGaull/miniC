@@ -5,7 +5,7 @@ program = { SOI ~ topLevel* ~ EOI }
 
 // == Top-level stuff ==
 topLevel = { module | function | libImport | fileImport | topLevelWithSemicolon }
-topLevelWithSemicolon = _{ (functionHeader | varDec | typedef | struct | enum) ~ ";" }
+topLevelWithSemicolon = _{ (functionHeader | varDec | typedef | struct | enum | union) ~ ";" }
 
 function = { functionHeader ~ "{" ~ statement* ~ "}" }
 functionHeader = { "extern"? ~ typ ~ identifier ~ "(" ~ paramList? ~ ")" }
@@ -22,6 +22,8 @@ importInner = { ("_" | "/" | "." | "\\" | ASCII_ALPHANUMERIC)+ }
 
 enumEntry = { identifier ~ ("=" ~ int)? }
 enum = { "enum" ~ identifier ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
+
+union = { "union" ~ identifier ~ "{" ~ structVarDec* ~ "}" }
 
 module = { "module" ~ identifier ~ "{" ~ moduleMember* ~ "}" }
 moduleMember = { topLevelWithSemicolon | function }
@@ -73,7 +75,7 @@ keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while"
     varModifier | "continue" | "break" | "sizeof" | "module" }
 identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
-typ = { ("struct" | "enum")? ~ hybridIdent ~ "*"* }
+typ = { ("struct" | "enum" | "union")? ~ hybridIdent ~ "*"* }
 
 typeCast = { "(" ~ typ ~ ")" ~ expression }
 

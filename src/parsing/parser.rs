@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type, union::Union};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -121,6 +121,12 @@ impl MyMiniCParser {
                 }
                 Result::Ok(
                     TopLevel::Module { name: name, body: body }
+                )
+            },
+            Rule::r#union => {
+                let un = Self::parse_union(pair)?;
+                Result::Ok(
+                    TopLevel::Union(un),
                 )
             },
             _ => {
@@ -569,6 +575,38 @@ impl MyMiniCParser {
                 )
             },
             _ => Result::Err(String::from("Could not parse struct")),
+        }
+    }
+
+    fn parse_union(pair: Pair<Rule>) -> Result<Union, String> {
+        match pair.as_rule() {
+            Rule::r#union => {
+                let mut pairs = pair.into_inner();
+                let name = pairs.next().unwrap().as_str();
+                let mut fields = Vec::<StructField>::new();
+                for p in pairs {
+                    match p.as_rule() {
+                        Rule::structVarDec => {
+                            let mut ppairs = p.into_inner();
+                            let ftyp = Self::parse_type(ppairs.next().unwrap())?;
+                            let fname = ppairs.next().unwrap().as_str();
+                            fields.push(StructField {
+                                name: String::from(fname),
+                                typ: ftyp,
+                            });
+                        },
+                        _ => return Result::Err(String::from("Could not parse inner value of union")),
+                    }
+                }
+
+                Result::Ok(
+                    Union {
+                        name: String::from(name),
+                        fields: fields,
+                    }
+                )
+            },
+            _ => Result::Err(String::from("Could not parse union")),
         }
     }
 

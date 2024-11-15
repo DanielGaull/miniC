@@ -1,6 +1,6 @@
 use crate::codegen::simple::{ModuleMemberCodeGen, SimpleCodeGen};
 
-use super::{enumm::Enum, expression::Expression, function::{Function, FunctionHeader}, sstruct::Struct, types::Type};
+use super::{enumm::Enum, expression::Expression, function::{Function, FunctionHeader}, sstruct::Struct, types::Type, union::Union};
 
 pub enum TopLevel {
     VarDeclaration {
@@ -16,6 +16,7 @@ pub enum TopLevel {
     Function(Function),
     Struct(Struct),
     Enum(Enum),
+    Union(Union),
     FunctionHeader(FunctionHeader),
     Module {
         name: String,
@@ -59,6 +60,7 @@ impl ModuleMemberCodeGen for TopLevel {
             TopLevel::Function(func) => func.generate(name_prefix),
             TopLevel::Struct(struc) => struc.generate(name_prefix),
             TopLevel::Enum(en) => en.generate(name_prefix),
+            TopLevel::Union(un) => un.generate(name_prefix),
             TopLevel::FunctionHeader(h) => {
                 let mut s = String::new();
                 s.push_str(h.generate(name_prefix).as_str());
