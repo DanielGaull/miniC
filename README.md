@@ -43,6 +43,54 @@ As an example, the above would transpile to something like the below code:
 
 You must call struct methods on a pointer to the struct, using a colon.
 
+## Modules
+miniC supports a module structure. You can create a module like so:
+
+    module <name> {
+        ... items
+    }
+
+Top level structures that can go inside of modules include:
+* Variables
+* Structs
+* Functions
+* Enumerations
+* Unions
+* Type Definitions (the type name will be prefixed with the module name)
+
+For example, we can create a sort of "Stoplight" module like so:
+
+    module sl {
+        enum Color {
+            RED,
+            YELLOW,
+            GREEN
+        };
+        struct Stoplight {
+            sl::Color color;
+            int timeLeft;
+        }
+    }
+
+This code will get transpiled like so:
+
+    typedef enum Color__enum {
+        RED,
+        YELLOW,
+        GREEN
+    } mod__sl__Color;
+
+    typedef struct Stoplight__struct {
+        mod__sl__Color color;
+        int timeLeft;
+    } mod__sl__Stoplight;
+
+As shown above, you can reference values within a module using `<module_name>::<member>`.
+
+The standard library exposes the `mc` module.
+
+You can have multiple `module` blocks with the same name. You can even add to the `mc` module.
+
 ## Additional Types
 miniC's standard library comes with additional features to make working in C easier. For example:
 
