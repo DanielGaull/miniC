@@ -1,6 +1,6 @@
 # miniC
 
-miniC is intented to make some slight improvements upon C. miniC transpiles to C code. miniC does not build as much upon C as C++ does, moreso adding smaller utility functionalities.
+miniC is intended to make some slight improvements upon C. miniC transpiles to C code. miniC does not build as much upon C as C++ does, moreso adding smaller utility functionalities.
 
 ## Why a Transpiler?
 miniC transpiles to C for ease of working with existing codebases. It allows users to enjoy the benefits that miniC provides without forcing others to use it, and gives access to all of the great tooling that already exists for C. Transpiled miniC is still human-readable, and miniC merely exists to reduce boilerplate.
