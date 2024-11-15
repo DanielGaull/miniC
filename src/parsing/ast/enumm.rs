@@ -9,7 +9,7 @@ impl ModuleMemberCodeGen for Enum {
     fn generate(&self, name_prefix: &String) -> String {
         if self.is_anonymous {
             // Always pure-generate anonymous enums
-            return self.generate_pure();
+            return self.generate_pure(0);
         }
 
         let mut s = String::new();
@@ -34,7 +34,7 @@ impl ModuleMemberCodeGen for Enum {
 }
 
 impl PureCodeGen for Enum {
-    fn generate_pure(&self) -> String {
+    fn generate_pure(&self, _indent: usize) -> String {
         let mut s = String::new();
         s.push_str("enum ");
         if !self.is_anonymous {

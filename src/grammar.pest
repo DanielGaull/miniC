@@ -12,7 +12,7 @@ functionHeader = { "extern"? ~ typ ~ identifier ~ "(" ~ paramList? ~ ")" }
 
 struct = { "struct" ~ identifier ~ "{" ~ structInner* ~ "}" }
 anonStruct = { "struct" ~ "{" ~ structInner* ~ "}" }
-structInner = _{ structVarDec }
+structInner = _{ structVarDec | anonUnion ~ ";" | anonStruct ~ ";" }
 structVarDec = { typ ~ identifier ~ ";" }
 
 libImport = { "#include" ~ "<" ~ importInner ~ ">" }
@@ -24,7 +24,7 @@ enum = { "enum" ~ identifier ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
 anonEnum = { "enum" ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
 
 union = { "union" ~ identifier ~ "{" ~ structInner* ~ "}" }
-anonUnion = { "union" ~ "{" ~ structVarDec* ~ "}" }
+anonUnion = { "union" ~ "{" ~ structInner* ~ "}" }
 
 module = { "module" ~ identifier ~ "{" ~ moduleMember* ~ "}" }
 moduleMember = { topLevelWithSemicolon | function }

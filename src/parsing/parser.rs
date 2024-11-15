@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, typedef::{TypeDef, TypeDefInner}, types::{Type, TypeType}, union::Union};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField, StructMember}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, typedef::{TypeDef, TypeDefInner}, types::{Type, TypeType}};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -126,7 +126,7 @@ impl MyMiniCParser {
             Rule::r#union => {
                 let un = Self::parse_union(pair)?;
                 Result::Ok(
-                    TopLevel::Union(un),
+                    TopLevel::Struct(un),
                 )
             },
             Rule::typedef => {
@@ -138,8 +138,8 @@ impl MyMiniCParser {
                         Rule::anonStruct => TypeDefInner::Struct(Self::parse_struct(first)?),
                         Rule::r#enum => TypeDefInner::Enum(Self::parse_enum(first)?),
                         Rule::anonEnum => TypeDefInner::Enum(Self::parse_enum(first)?),
-                        Rule::r#union => TypeDefInner::Union(Self::parse_union(first)?),
-                        Rule::anonUnion => TypeDefInner::Union(Self::parse_union(first)?),
+                        Rule::r#union => TypeDefInner::Struct(Self::parse_union(first)?),
+                        Rule::anonUnion => TypeDefInner::Struct(Self::parse_union(first)?),
                         Rule::typ => TypeDefInner::Type(Self::parse_type(first)?),
                         _ => return Result::Err(String::from("Could not parse typedef inner")),
                     };
@@ -582,23 +582,25 @@ impl MyMiniCParser {
             Rule::r#struct => {
                 let mut pairs = pair.into_inner();
                 let name = pairs.next().unwrap().as_str();
-                let fields = Self::parse_struct_inner(pairs)?;
+                let members = Self::parse_struct_inner(pairs)?;
                 Result::Ok(
                     Struct {
                         name: String::from(name),
-                        fields: fields,
+                        members: members,
                         is_anonymous: false,
+                        is_union: false,
                     }
                 )
             },
             Rule::anonStruct => {
                 let pairs = pair.into_inner();
-                let fields = Self::parse_struct_inner(pairs)?;
+                let members = Self::parse_struct_inner(pairs)?;
                 Result::Ok(
                     Struct {
                         name: String::new(),
-                        fields: fields,
+                        members: members,
                         is_anonymous: true,
+                        is_union: false,
                     }
                 )
             },
@@ -606,51 +608,65 @@ impl MyMiniCParser {
         }
     }
 
-    fn parse_union(pair: Pair<Rule>) -> Result<Union, String> {
+    fn parse_union(pair: Pair<Rule>) -> Result<Struct, String> {
         match pair.as_rule() {
             Rule::r#union => {
                 let mut pairs = pair.into_inner();
                 let name = pairs.next().unwrap().as_str();
-                let fields = Self::parse_struct_inner(pairs)?;
+                let members = Self::parse_struct_inner(pairs)?;
                 Result::Ok(
-                    Union {
+                    Struct {
                         name: String::from(name),
-                        fields: fields,
+                        members: members,
                         is_anonymous: false,
+                        is_union: true,
                     }
                 )
             },
             Rule::anonUnion => {
                 let pairs = pair.into_inner();
-                let fields = Self::parse_struct_inner(pairs)?;
+                let members = Self::parse_struct_inner(pairs)?;
                 Result::Ok(
-                    Union {
+                    Struct {
                         name: String::new(),
-                        fields: fields,
+                        members: members,
                         is_anonymous: true,
+                        is_union: true,
                     }
                 )
             },
             _ => Result::Err(String::from("Could not parse union")),
         }
     }
-    fn parse_struct_inner(pairs: Pairs<'_, Rule>) -> Result<Vec<StructField>, String> {
-        let mut fields = Vec::<StructField>::new();
+    fn parse_struct_inner(pairs: Pairs<'_, Rule>) -> Result<Vec<StructMember>, String> {
+        let mut members = Vec::<StructMember>::new();
         for p in pairs {
             match p.as_rule() {
                 Rule::structVarDec => {
                     let mut ppairs = p.into_inner();
                     let ftyp = Self::parse_type(ppairs.next().unwrap())?;
                     let fname = ppairs.next().unwrap().as_str();
-                    fields.push(StructField {
-                        name: String::from(fname),
-                        typ: ftyp,
-                    });
+                    members.push(
+                        StructMember::Field(
+                            StructField {
+                                name: String::from(fname),
+                                typ: ftyp,
+                            }
+                        )
+                    );
+                },
+                Rule::anonStruct => {
+                    let struc = Self::parse_struct(p)?;
+                    members.push(StructMember::AnonStruct(struc))
+                },
+                Rule::anonUnion => {
+                    let union = Self::parse_union(p)?;
+                    members.push(StructMember::AnonStruct(union))
                 },
                 _ => return Result::Err(String::from("Could not parse inner value of struct/union")),
             }
         }
-        Result::Ok(fields)
+        Result::Ok(members)
     }
 
     fn parse_enum(pair: Pair<Rule>) -> Result<Enum, String> {

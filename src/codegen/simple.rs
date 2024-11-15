@@ -11,5 +11,5 @@ pub trait ModuleMemberCodeGen {
 }
 
 pub trait PureCodeGen {
-    fn generate_pure(&self) -> String;
+    fn generate_pure(&self, indent_level: usize) -> String;
 }

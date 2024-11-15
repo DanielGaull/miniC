@@ -1,6 +1,6 @@
 use crate::codegen::simple::{ModuleMemberCodeGen, PureCodeGen, SimpleCodeGen};
 
-use super::{enumm::Enum, sstruct::Struct, types::Type, union::Union};
+use super::{enumm::Enum, sstruct::Struct, types::Type};
 
 pub struct TypeDef {
     pub name: String,
@@ -13,9 +13,8 @@ impl ModuleMemberCodeGen for TypeDef {
         s.push_str(
             match &self.typ {
                 TypeDefInner::Type(t) => t.generate(),
-                TypeDefInner::Enum(e) => e.generate_pure(),
-                TypeDefInner::Struct(s) => s.generate_pure(),
-                TypeDefInner::Union(u) => u.generate_pure(),
+                TypeDefInner::Enum(e) => e.generate_pure(0),
+                TypeDefInner::Struct(s) => s.generate_pure(0),
             }.as_str()
         );
         s.push_str(" ");
@@ -30,5 +29,4 @@ pub enum TypeDefInner {
     Type(Type),
     Struct(Struct),
     Enum(Enum),
-    Union(Union),
 }

@@ -7,5 +7,4 @@ pub mod function;
 pub mod sstruct;
 pub mod enumm;
 pub mod identifier;
-pub mod union;
 pub mod typedef;
