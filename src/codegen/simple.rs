@@ -7,5 +7,5 @@ pub trait IndentCodeGen {
 }
 
 pub trait ModuleMemberCodeGen {
-    fn generate(&self, name_prefix: String) -> String;
+    fn generate(&self, name_prefix: &String) -> String;
 }

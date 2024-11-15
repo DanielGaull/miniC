@@ -20,6 +20,7 @@ mod tests {
             let out_path = path.join("out.c");
             let out_content = read_file_to_string(&out_path).replace("\r\n", "\n");
 
+            println!("Trying: {}", path.to_str().unwrap());
             let program = MyMiniCParser::parse_file(String::from(in_path.to_str().unwrap()));
             if program.is_err() {
                 panic!("ERROR: {}", program.err().unwrap());

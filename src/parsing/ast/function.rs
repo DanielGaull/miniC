@@ -9,7 +9,7 @@ pub struct FunctionHeader {
     pub is_extern: bool,
 }
 impl ModuleMemberCodeGen for FunctionHeader {    
-    fn generate(&self, name_prefix: String) -> String {
+    fn generate(&self, name_prefix: &String) -> String {
         let mut s = String::new();
         if self.is_extern {
             s.push_str("extern ");
@@ -30,7 +30,7 @@ pub struct Function {
     pub body: Vec<Statement>,
 }
 impl ModuleMemberCodeGen for Function {
-    fn generate(&self, name_prefix: String) -> String {
+    fn generate(&self, name_prefix: &String) -> String {
         let mut lines = Vec::<String>::new();
 
         let mut s = String::new();

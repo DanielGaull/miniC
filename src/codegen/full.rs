@@ -17,7 +17,7 @@ impl CodeGenerator {
         let mut s = String::new();
 
         for top in program.statements {
-            s.push_str(top.generate(String::new()).as_str());
+            s.push_str(top.generate(&String::new()).as_str());
             s.push_str("\n");
         }
 

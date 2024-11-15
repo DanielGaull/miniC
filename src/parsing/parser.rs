@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::Type};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -112,7 +112,21 @@ impl MyMiniCParser {
                     )
                 )
             },
-            _ => Result::Err(String::from("Could not parse top-level")),
+            Rule::module => {
+                let mut pairs = pair.into_inner();
+                let name = String::from(pairs.next().unwrap().as_str());
+                let mut body = Vec::<TopLevel>::new();
+                for p in pairs {
+                    body.push(Self::parse_top_level(p.into_inner().next().unwrap())?);
+                }
+                Result::Ok(
+                    TopLevel::Module { name: name, body: body }
+                )
+            },
+            _ => {
+                println!("\n\n{}\n\n", pair);
+                Result::Err(String::from("Could not parse top-level"))
+            },
         }
     }
 
@@ -291,7 +305,7 @@ impl MyMiniCParser {
                 Result::Ok(Atom::Boolean(value))
             },
             Rule::string => Result::Ok(Atom::String(String::from(pair.into_inner().next().unwrap().as_str()))),
-            Rule::identifier => Result::Ok(Atom::Identifier(String::from(pair.as_str()))),
+            Rule::hybridIdent => Result::Ok(Atom::Identifier(Self::parse_identifier(pair)?)),
             Rule::typeCast => {
                 let mut pairs = pair.into_inner();
                 let typ = Self::parse_type(pairs.next().unwrap())?;
@@ -322,7 +336,10 @@ impl MyMiniCParser {
                 let c = pair.into_inner().next().unwrap().as_str().as_bytes()[0];
                 Result::Ok(Atom::Char(c))
             },
-            _ => Result::Err(String::from("Could not parse atom")),
+            _ => {
+                println!("\n\n{}\n\n", pair);
+                Result::Err(String::from("Could not parse atom"))
+            },
         }
     }
 
@@ -425,17 +442,34 @@ impl MyMiniCParser {
             Rule::typ => {
                 let is_struct = pair.as_str().starts_with("struct");
                 let pointer_layers = pair.as_str().chars().filter(|c| *c == '*').count();
-                let name = pair.into_inner().next().unwrap().as_str();
+                let name = Self::parse_identifier(pair.into_inner().next().unwrap())?;
                 Result::Ok(
                     Type {
                         is_struct: is_struct,
                         pointer_layers: pointer_layers,
-                        name: String::from(name),
+                        name: name,
                     }
                 )
             },
             _ => {
                 Result::Err(String::from("Could not parse type"))
+            },
+        }
+    }
+
+    fn parse_identifier(mut pair: Pair<Rule>) -> Result<Identifier, String> {
+        pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::identifier => Result::Ok(Identifier::Plain(String::from(pair.as_str()))),
+            Rule::moduleIdent => {
+                let mut pairs = pair.into_inner();
+                let parent = String::from(pairs.next().unwrap().as_str());
+                let child = String::from(pairs.next().unwrap().as_str());
+                Result::Ok(Identifier::Module(parent, child))
+            },
+            _ => {
+                println!("\n\n{}\n\n", pair);
+                Result::Err(String::from("Could not parse identifier"))
             },
         }
     }

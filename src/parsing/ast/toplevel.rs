@@ -17,9 +17,13 @@ pub enum TopLevel {
     Struct(Struct),
     Enum(Enum),
     FunctionHeader(FunctionHeader),
+    Module {
+        name: String,
+        body: Vec<TopLevel>,
+    },
 }
 impl ModuleMemberCodeGen for TopLevel {
-    fn generate(&self, name_prefix: String) -> String {
+    fn generate(&self, name_prefix: &String) -> String {
         match self {
             TopLevel::VarDeclaration { typ, name, right, modifier} => {
                 let mut s = String::new();
@@ -59,6 +63,15 @@ impl ModuleMemberCodeGen for TopLevel {
                 let mut s = String::new();
                 s.push_str(h.generate(name_prefix).as_str());
                 s.push_str(";");
+                s
+            },
+            TopLevel::Module { name, body } => {
+                let mut s = String::new();
+                let prefix = format!("mod__{}__", name);
+                for t in body {
+                    s.push_str(t.generate(&prefix).as_str());
+                    s.push_str("\n");
+                }
                 s
             },
         }

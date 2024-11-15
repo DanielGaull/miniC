@@ -7,10 +7,9 @@ pub struct Struct {
     pub fields: Vec<StructField>,
 }
 impl ModuleMemberCodeGen for Struct {
-    fn generate(&self, name_prefix: String) -> String {
+    fn generate(&self, name_prefix: &String) -> String {
         let mut s = String::new();
         s.push_str("typedef struct ");
-        s.push_str(name_prefix.as_str());
         s.push_str(self.name.as_str());
         s.push_str("__struct {\n");
         for field in &self.fields {
@@ -19,6 +18,7 @@ impl ModuleMemberCodeGen for Struct {
             s.push_str("\n");
         }
         s.push_str("} ");
+        s.push_str(name_prefix.as_str());
         s.push_str(self.name.as_str());
         s.push_str(";");
         s
