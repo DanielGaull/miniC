@@ -5,7 +5,7 @@ program = { SOI ~ topLevel* ~ EOI }
 
 // == Top-level stuff ==
 topLevel = { module | function | libImport | fileImport | topLevelWithSemicolon }
-topLevelWithSemicolon = _{ (functionHeader | varDec | typedef | struct | enum | union) ~ ";" }
+topLevelWithSemicolon = _{ (functionHeader | typedef | varDec | struct | enum | union) ~ ";" }
 
 function = { functionHeader ~ "{" ~ statement* ~ "}" }
 functionHeader = { "extern"? ~ typ ~ identifier ~ "(" ~ paramList? ~ ")" }
@@ -14,8 +14,6 @@ struct = { "struct" ~ identifier ~ "{" ~ structInner* ~ "}" }
 anonStruct = { "struct" ~ "{" ~ structInner* ~ "}" }
 structInner = _{ structVarDec }
 structVarDec = { typ ~ identifier ~ ";" }
-
-typedef = { "typedef" ~ (struct | typ) ~ identifier }
 
 libImport = { "#include" ~ "<" ~ importInner ~ ">" }
 fileImport = { "#include" ~ "\"" ~ importInner ~ "\"" }
@@ -30,6 +28,9 @@ anonUnion = { "union" ~ "{" ~ structVarDec* ~ "}" }
 
 module = { "module" ~ identifier ~ "{" ~ moduleMember* ~ "}" }
 moduleMember = { topLevelWithSemicolon | function }
+
+typedef = { "typedef" ~ typedefInner ~ identifier }
+typedefInner = _{ anonStruct | anonEnum | anonUnion | struct | enum | union | typ }
 
 // == Core statements ==
 statementWithoutSemicolon = _{ varDec | varAssign | incDec | binOpVarAssign | 
@@ -75,7 +76,7 @@ hybridIdent = { moduleIdent | identifier }
 // This setup allows us to require that idenifiers can only start with keywords if
 // there are additional characters after
 keyword = _{ "return" | "struct" | "true" | "false" | "typedef" | "if" | "while" | "for" | "do" |
-    varModifier | "continue" | "break" | "sizeof" | "module" }
+    varModifier | "continue" | "break" | "sizeof" | "module" | "typedef" }
 identifier = ${ keyword? ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 typ = { ("struct" | "enum" | "union")? ~ hybridIdent ~ "*"* }

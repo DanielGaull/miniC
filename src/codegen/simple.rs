@@ -9,3 +9,7 @@ pub trait IndentCodeGen {
 pub trait ModuleMemberCodeGen {
     fn generate(&self, name_prefix: &String) -> String;
 }
+
+pub trait PureCodeGen {
+    fn generate_pure(&self) -> String;
+}

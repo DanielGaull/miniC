@@ -1,4 +1,4 @@
-use crate::codegen::simple::{ModuleMemberCodeGen, SimpleCodeGen};
+use crate::codegen::simple::{ModuleMemberCodeGen, PureCodeGen, SimpleCodeGen};
 
 pub struct Enum {
     pub name: String,
@@ -7,12 +7,15 @@ pub struct Enum {
 }
 impl ModuleMemberCodeGen for Enum {
     fn generate(&self, name_prefix: &String) -> String {
+        if self.is_anonymous {
+            // Always pure-generate anonymous enums
+            return self.generate_pure();
+        }
+
         let mut s = String::new();
         s.push_str("typedef enum ");
-        if !self.is_anonymous {
-            s.push_str(self.name.as_str());
-            s.push_str("__enum ");
-        }
+        s.push_str(self.name.as_str());
+        s.push_str("__enum ");
         s.push_str("{\n");
         for i in 0..self.entries.len() {
             s.push_str("    ");
@@ -26,6 +29,28 @@ impl ModuleMemberCodeGen for Enum {
         s.push_str(name_prefix.as_str());
         s.push_str(self.name.as_str());
         s.push_str(";");
+        s
+    }
+}
+
+impl PureCodeGen for Enum {
+    fn generate_pure(&self) -> String {
+        let mut s = String::new();
+        s.push_str("enum ");
+        if !self.is_anonymous {
+            s.push_str(self.name.as_str());
+            s.push_str(" ");
+        }
+        s.push_str("{\n");
+        for i in 0..self.entries.len() {
+            s.push_str("    ");
+            s.push_str(self.entries[i].generate().as_str());
+            if i + 1 < self.entries.len() {
+                s.push_str(",");
+            }
+            s.push_str("\n");
+        }
+        s.push_str("}");
         s
     }
 }

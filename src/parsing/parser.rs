@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, types::{Type, TypeType}, union::Union};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, typedef::{TypeDef, TypeDefInner}, types::{Type, TypeType}, union::Union};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -127,6 +127,30 @@ impl MyMiniCParser {
                 let un = Self::parse_union(pair)?;
                 Result::Ok(
                     TopLevel::Union(un),
+                )
+            },
+            Rule::typedef => {
+                let mut pairs = pair.into_inner();
+                let first = pairs.next().unwrap();
+                let inner = 
+                    match first.as_rule() {
+                        Rule::r#struct => TypeDefInner::Struct(Self::parse_struct(first)?),
+                        Rule::anonStruct => TypeDefInner::Struct(Self::parse_struct(first)?),
+                        Rule::r#enum => TypeDefInner::Enum(Self::parse_enum(first)?),
+                        Rule::anonEnum => TypeDefInner::Enum(Self::parse_enum(first)?),
+                        Rule::r#union => TypeDefInner::Union(Self::parse_union(first)?),
+                        Rule::anonUnion => TypeDefInner::Union(Self::parse_union(first)?),
+                        Rule::typ => TypeDefInner::Type(Self::parse_type(first)?),
+                        _ => return Result::Err(String::from("Could not parse typedef inner")),
+                    };
+                let name = pairs.next().unwrap().as_str();
+                Result::Ok(
+                    TopLevel::TypeDef(
+                        TypeDef {
+                            name: String::from(name),
+                            typ: inner,
+                        }
+                    )
                 )
             },
             _ => {

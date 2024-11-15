@@ -1,6 +1,6 @@
 use crate::codegen::simple::{ModuleMemberCodeGen, SimpleCodeGen};
 
-use super::{enumm::Enum, expression::Expression, function::{Function, FunctionHeader}, sstruct::Struct, types::Type, union::Union};
+use super::{enumm::Enum, expression::Expression, function::{Function, FunctionHeader}, sstruct::Struct, typedef::TypeDef, types::Type, union::Union};
 
 pub enum TopLevel {
     VarDeclaration {
@@ -22,6 +22,7 @@ pub enum TopLevel {
         name: String,
         body: Vec<TopLevel>,
     },
+    TypeDef(TypeDef),
 }
 impl ModuleMemberCodeGen for TopLevel {
     fn generate(&self, name_prefix: &String) -> String {
@@ -76,6 +77,7 @@ impl ModuleMemberCodeGen for TopLevel {
                 }
                 s
             },
+            TopLevel::TypeDef(t) => t.generate(name_prefix),
         }
     }
 }
