@@ -2,6 +2,11 @@
 
 miniC is intented to make some slight improvements upon C. miniC transpiles to C code. miniC does not build as much upon C as C++ does, moreso adding smaller utility functionalities.
 
+## Why a Transpiler?
+miniC transpiles to C for ease of working with existing codebases. It allows users to enjoy the benefits that miniC provides without forcing others to use it, and gives access to all of the great tooling that already exists for C. Transpiled miniC is still human-readable, and miniC merely exists to reduce boilerplate.
+
+In the future, there are plans to allow for the reverse, where code that has gone from miniC -> C can go back from C -> miniC. The ultimate vision is a world in which a repository can be written entirely in C, and a miniC user can come in, make their changes in miniC, build + push to C, and then later pull changes from the repo and make their edits in miniC. In the far future, there could be tooling to convert code that wasn't even transpiled using miniC to miniC, making code written before miniC itself more readable and easy to work with.
+
 ## Struct Functions
 miniC allows structs to have functions defined within them and called on them, like this:
 
