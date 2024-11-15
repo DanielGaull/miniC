@@ -5,7 +5,7 @@ program = { SOI ~ topLevel* ~ EOI }
 
 // == Top-level stuff ==
 topLevel = { function | libImport | fileImport | topLevelWithSemicolon }
-topLevelWithSemicolon = _{ (varDec | typedef | struct | enum) ~ ";" }
+topLevelWithSemicolon = _{ (functionHeader | varDec | typedef | struct | enum) ~ ";" }
 
 function = { functionHeader ~ "{" ~ statement* ~ "}" }
 functionHeader = { "extern"? ~ typ ~ identifier ~ "(" ~ paramList? ~ ")" }

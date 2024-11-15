@@ -49,7 +49,17 @@ impl MyMiniCParser {
         match pair.as_rule() {
             Rule::varDec => {
                 let mut pairs = pair.into_inner();
-                let typ = Self::parse_type(pairs.next().unwrap())?;
+                let mut modifiers = Vec::<String>::new();
+                let mut next = pairs.next().unwrap();
+                loop {
+                    match next.as_rule() {
+                        Rule::varModifier => modifiers.push(String::from(next.as_str())),
+                        _ => break,
+                    }
+                    next = pairs.next().unwrap();
+                }
+
+                let typ = Self::parse_type(next)?;
                 let name = pairs.next().unwrap().as_str();
                 let mut init_val: Option<Expression> = None;
                 if let Some(expr_pair) = pairs.next() {
@@ -61,6 +71,7 @@ impl MyMiniCParser {
                         typ: typ,
                         name: String::from(name),
                         right: init_val,
+                        modifier: modifiers,
                     }
                 )
             },
@@ -92,6 +103,13 @@ impl MyMiniCParser {
                 let path = pair.into_inner().next().unwrap().as_str();
                 Result::Ok(
                     TopLevel::Import { name: String::from(path), is_lib: false }
+                )
+            },
+            Rule::functionHeader => {
+                Result::Ok(
+                    TopLevel::FunctionHeader(
+                        Self::parse_function_header(pair)?
+                    )
                 )
             },
             _ => Result::Err(String::from("Could not parse top-level")),
@@ -390,7 +408,10 @@ impl MyMiniCParser {
                     }
                 )
             },
-            _ => Result::Err(String::from("Could not parse type")),
+            _ => {
+                println!("\n\n{}\n\n", pair);
+                Result::Err(String::from("Could not parse type"))
+            },
         }
     }
 
@@ -407,7 +428,7 @@ impl MyMiniCParser {
                         params.push(Self::parse_parameter(p)?);
                     }
                 }
-                
+
                 Result::Ok(
                     FunctionHeader {
                         return_type: typ,

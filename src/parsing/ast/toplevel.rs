@@ -1,12 +1,13 @@
 use crate::codegen::simple::{IndentCodeGen, SimpleCodeGen};
 
-use super::{enumm::Enum, expression::Expression, function::Function, sstruct::Struct, types::Type};
+use super::{enumm::Enum, expression::Expression, function::{Function, FunctionHeader}, sstruct::Struct, types::Type};
 
 pub enum TopLevel {
     VarDeclaration {
         typ: Type,
         name: String,
         right: Option<Expression>,
+        modifier: Vec<String>,
     },
     Import {
         name: String,
@@ -15,12 +16,17 @@ pub enum TopLevel {
     Function(Function),
     Struct(Struct),
     Enum(Enum),
+    FunctionHeader(FunctionHeader),
 }
 impl SimpleCodeGen for TopLevel {
     fn generate(&self) -> String {
         match self {
-            TopLevel::VarDeclaration { typ, name, right } => {
+            TopLevel::VarDeclaration { typ, name, right, modifier} => {
                 let mut s = String::new();
+                for m in modifier {
+                    s.push_str(m.as_str());
+                    s.push_str(" ");
+                }
                 s.push_str(typ.generate().as_str());
                 s.push_str(" ");
                 s.push_str(name.as_str());
@@ -48,6 +54,12 @@ impl SimpleCodeGen for TopLevel {
             TopLevel::Function(func) => func.generate(0),
             TopLevel::Struct(struc) => struc.generate(),
             TopLevel::Enum(en) => en.generate(),
+            TopLevel::FunctionHeader(h) => {
+                let mut s = String::new();
+                s.push_str(h.generate().as_str());
+                s.push_str(";");
+                s
+            },
         }
     }
 }
