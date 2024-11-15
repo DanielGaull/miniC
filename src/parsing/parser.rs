@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::iterators::{Pair, Pairs};
 use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
@@ -558,26 +558,23 @@ impl MyMiniCParser {
             Rule::r#struct => {
                 let mut pairs = pair.into_inner();
                 let name = pairs.next().unwrap().as_str();
-                let mut fields = Vec::<StructField>::new();
-                for p in pairs {
-                    match p.as_rule() {
-                        Rule::structVarDec => {
-                            let mut ppairs = p.into_inner();
-                            let ftyp = Self::parse_type(ppairs.next().unwrap())?;
-                            let fname = ppairs.next().unwrap().as_str();
-                            fields.push(StructField {
-                                name: String::from(fname),
-                                typ: ftyp,
-                            });
-                        },
-                        _ => return Result::Err(String::from("Could not parse inner value of struct")),
-                    }
-                }
-
+                let fields = Self::parse_struct_inner(pairs)?;
                 Result::Ok(
                     Struct {
                         name: String::from(name),
                         fields: fields,
+                        is_anonymous: false,
+                    }
+                )
+            },
+            Rule::anonStruct => {
+                let pairs = pair.into_inner();
+                let fields = Self::parse_struct_inner(pairs)?;
+                Result::Ok(
+                    Struct {
+                        name: String::new(),
+                        fields: fields,
+                        is_anonymous: true,
                     }
                 )
             },
@@ -590,31 +587,46 @@ impl MyMiniCParser {
             Rule::r#union => {
                 let mut pairs = pair.into_inner();
                 let name = pairs.next().unwrap().as_str();
-                let mut fields = Vec::<StructField>::new();
-                for p in pairs {
-                    match p.as_rule() {
-                        Rule::structVarDec => {
-                            let mut ppairs = p.into_inner();
-                            let ftyp = Self::parse_type(ppairs.next().unwrap())?;
-                            let fname = ppairs.next().unwrap().as_str();
-                            fields.push(StructField {
-                                name: String::from(fname),
-                                typ: ftyp,
-                            });
-                        },
-                        _ => return Result::Err(String::from("Could not parse inner value of union")),
-                    }
-                }
-
+                let fields = Self::parse_struct_inner(pairs)?;
                 Result::Ok(
                     Union {
                         name: String::from(name),
                         fields: fields,
+                        is_anonymous: false,
+                    }
+                )
+            },
+            Rule::anonUnion => {
+                let pairs = pair.into_inner();
+                let fields = Self::parse_struct_inner(pairs)?;
+                Result::Ok(
+                    Union {
+                        name: String::new(),
+                        fields: fields,
+                        is_anonymous: true,
                     }
                 )
             },
             _ => Result::Err(String::from("Could not parse union")),
         }
+    }
+    fn parse_struct_inner(pairs: Pairs<'_, Rule>) -> Result<Vec<StructField>, String> {
+        let mut fields = Vec::<StructField>::new();
+        for p in pairs {
+            match p.as_rule() {
+                Rule::structVarDec => {
+                    let mut ppairs = p.into_inner();
+                    let ftyp = Self::parse_type(ppairs.next().unwrap())?;
+                    let fname = ppairs.next().unwrap().as_str();
+                    fields.push(StructField {
+                        name: String::from(fname),
+                        typ: ftyp,
+                    });
+                },
+                _ => return Result::Err(String::from("Could not parse inner value of struct/union")),
+            }
+        }
+        Result::Ok(fields)
     }
 
     fn parse_enum(pair: Pair<Rule>) -> Result<Enum, String> {
@@ -622,37 +634,52 @@ impl MyMiniCParser {
             Rule::r#enum => {
                 let mut pairs = pair.into_inner();
                 let name = pairs.next().unwrap().as_str();
-                let mut entries = Vec::<EnumEntry>::new();
-                for p in pairs {
-                    match p.as_rule() {
-                        Rule::enumEntry => {
-                            let mut ppairs = p.into_inner();
-                            let vname = ppairs.next().unwrap().as_str();
-                            let value: Option<i32>;
-                            if let Some(next) = ppairs.next() {
-                                value = Some(next.as_str().parse::<i32>().unwrap());
-                            } else {
-                                value = None;
-                            }
-                            
-                            entries.push(EnumEntry {
-                                name: String::from(vname),
-                                value: value,
-                            });
-                        },
-                        _ => return Result::Err(String::from("Could not parse inner value of struct")),
-                    }
-                }
-
+                let entries = Self::parse_enum_inner(pairs)?;
                 Result::Ok(
                     Enum {
                         name: String::from(name),
                         entries: entries,
+                        is_anonymous: false,
+                    }
+                )
+            },
+            Rule::anonEnum => {
+                let pairs = pair.into_inner();
+                let entries = Self::parse_enum_inner(pairs)?;
+                Result::Ok(
+                    Enum {
+                        name: String::new(),
+                        entries: entries,
+                        is_anonymous: true,
                     }
                 )
             },
             _ => Result::Err(String::from("Could not parse enum")),
         }
+    }
+    fn parse_enum_inner(pairs: Pairs<'_, Rule>) -> Result<Vec<EnumEntry>, String> {
+        let mut entries = Vec::<EnumEntry>::new();
+        for p in pairs {
+            match p.as_rule() {
+                Rule::enumEntry => {
+                    let mut ppairs = p.into_inner();
+                    let vname = ppairs.next().unwrap().as_str();
+                    let value: Option<i32>;
+                    if let Some(next) = ppairs.next() {
+                        value = Some(next.as_str().parse::<i32>().unwrap());
+                    } else {
+                        value = None;
+                    }
+                    
+                    entries.push(EnumEntry {
+                        name: String::from(vname),
+                        value: value,
+                    });
+                },
+                _ => return Result::Err(String::from("Could not parse inner value of enum")),
+            }
+        }
+        Result::Ok(entries)
     }
 
     fn parse_identifier_expr(pair: Pair<Rule>) -> Result<IdentifierExpression, String> {

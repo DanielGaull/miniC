@@ -11,6 +11,7 @@ function = { functionHeader ~ "{" ~ statement* ~ "}" }
 functionHeader = { "extern"? ~ typ ~ identifier ~ "(" ~ paramList? ~ ")" }
 
 struct = { "struct" ~ identifier ~ "{" ~ structInner* ~ "}" }
+anonStruct = { "struct" ~ "{" ~ structInner* ~ "}" }
 structInner = _{ structVarDec }
 structVarDec = { typ ~ identifier ~ ";" }
 
@@ -22,8 +23,10 @@ importInner = { ("_" | "/" | "." | "\\" | ASCII_ALPHANUMERIC)+ }
 
 enumEntry = { identifier ~ ("=" ~ int)? }
 enum = { "enum" ~ identifier ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
+anonEnum = { "enum" ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
 
-union = { "union" ~ identifier ~ "{" ~ structVarDec* ~ "}" }
+union = { "union" ~ identifier ~ "{" ~ structInner* ~ "}" }
+anonUnion = { "union" ~ "{" ~ structVarDec* ~ "}" }
 
 module = { "module" ~ identifier ~ "{" ~ moduleMember* ~ "}" }
 moduleMember = { topLevelWithSemicolon | function }
