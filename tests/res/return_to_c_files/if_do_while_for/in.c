@@ -18,8 +18,8 @@ void main() {
         i += 1;
         break;
     }
-    // do {
-    //     i += 1;
-    // } while (i < 100);
+    do {
+        i += 1;
+    } while (i < 100);
     return;
 }

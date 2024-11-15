@@ -25,8 +25,8 @@ enum = { "enum" ~ identifier ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
 
 // == Core statements ==
 statementWithoutSemicolon = _{ varDec | varAssign | incDec | binOpVarAssign | 
-    return | emptyReturn | continue | break | expression }
-bigStatement = _{ if | while | for | doWhile }
+    return | emptyReturn | continue | break | expression | doWhile }
+bigStatement = _{ if | while | for }
 statement = { (statementWithoutSemicolon ~ ";") | bigStatement }
 varAssign = { identExpr ~ "=" ~ expression }
 binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }

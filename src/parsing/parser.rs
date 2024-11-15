@@ -213,6 +213,28 @@ impl MyMiniCParser {
                     body: body
                 })
             },
+            Rule::doWhile => {
+                let mut peekable = pair.into_inner().peekable();
+                let mut body = Vec::<Statement>::new();
+                let mut last = None;
+                let expr: Expression;
+                while let Some(item) = peekable.next() {
+                    if peekable.peek().is_none() {
+                        // on last item, so handle outside of loop
+                        last = Some(item);
+                        break;
+                    }
+                    body.push(Self::parse_statement(item.into_inner().next().unwrap())?);
+                }
+                if let Some(last_item) = last {
+                    expr = Self::parse_expression(last_item)?;
+                    Result::Ok(
+                        Statement::DoWhile { condition: expr, body: body }
+                    )
+                } else {
+                    Result::Err(String::from("Do-while: Missing condition!"))
+                }
+            },
             Rule::r#continue => {
                 Result::Ok(Statement::Continue)
             },
@@ -413,7 +435,6 @@ impl MyMiniCParser {
                 )
             },
             _ => {
-                println!("\n\n{}\n\n", pair);
                 Result::Err(String::from("Could not parse type"))
             },
         }
