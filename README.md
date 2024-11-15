@@ -91,6 +91,29 @@ The standard library exposes the `mc` module.
 
 You can have multiple `module` blocks with the same name. You can even add to the `mc` module.
 
+## Function Pointer Syntax
+In C, you can declare a function pointer like so:
+
+    void (*pointer)(int, int);
+
+Which creates a pointer named `pointer` to a function that takes two `int`s and returns `void`.
+
+However, if you want to create function pointers to other function pointers, or that return a pointer, it can quickly get confused.
+
+miniC allows for core C function pointer syntax, but also introduces new syntax that is easier to read.
+
+The above pointer could also be declared like so:
+
+    (int, int) => void pointer;
+
+Here, we separate the name from the type, and also make the type (arg, arg, ...) => return_type.
+
+This makes chaining function pointers easier to read as well!
+
+    ()=>()=>void functionThatReturnsFunctionPointer;
+
+This points to a function that returns a function pointer that returns void.
+
 ## Additional Types
 miniC's standard library comes with additional features to make working in C easier. For example:
 
