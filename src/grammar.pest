@@ -23,7 +23,8 @@ importInner = { ("_" | "/" | "." | "\\" | ASCII_ALPHANUMERIC)+ }
 enumEntry = { identifier ~ ("=" ~ int)? }
 enum = { "enum" ~ identifier ~ "{" ~ (enumEntry ~ ("," ~ enumEntry)*)? ~ "}" }
 
-module = { "module" ~ identifier ~ "{" ~ topLevel* ~ "}" }
+module = { "module" ~ identifier ~ "{" ~ moduleMember* ~ "}" }
+moduleMember = { topLevelWithSemicolon | function }
 
 // == Core statements ==
 statementWithoutSemicolon = _{ varDec | varAssign | incDec | binOpVarAssign | 
