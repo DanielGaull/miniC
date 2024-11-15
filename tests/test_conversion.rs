@@ -11,7 +11,7 @@ mod tests {
 
     #[test]
     fn test_return_to_c() {
-        let paths = fs::read_dir("./tests/res/return_to_c_files").expect("Could not read test files");
+        let paths = fs::read_dir("./tests/res/conversion_files").expect("Could not read test files");
         for entry in paths {
             let mut generator: CodeGenerator = CodeGenerator::new();
 
