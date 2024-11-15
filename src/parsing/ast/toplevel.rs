@@ -1,4 +1,4 @@
-use crate::codegen::simple::{IndentCodeGen, SimpleCodeGen};
+use crate::codegen::simple::{ModuleMemberCodeGen, SimpleCodeGen};
 
 use super::{enumm::Enum, expression::Expression, function::{Function, FunctionHeader}, sstruct::Struct, types::Type};
 
@@ -18,8 +18,8 @@ pub enum TopLevel {
     Enum(Enum),
     FunctionHeader(FunctionHeader),
 }
-impl SimpleCodeGen for TopLevel {
-    fn generate(&self) -> String {
+impl ModuleMemberCodeGen for TopLevel {
+    fn generate(&self, name_prefix: String) -> String {
         match self {
             TopLevel::VarDeclaration { typ, name, right, modifier} => {
                 let mut s = String::new();
@@ -29,6 +29,7 @@ impl SimpleCodeGen for TopLevel {
                 }
                 s.push_str(typ.generate().as_str());
                 s.push_str(" ");
+                s.push_str(name_prefix.as_str());
                 s.push_str(name.as_str());
                 if let Some(value) = right {
                     s.push_str(" = ");
@@ -51,12 +52,12 @@ impl SimpleCodeGen for TopLevel {
                 }
                 s
             },
-            TopLevel::Function(func) => func.generate(0),
-            TopLevel::Struct(struc) => struc.generate(),
-            TopLevel::Enum(en) => en.generate(),
+            TopLevel::Function(func) => func.generate(name_prefix),
+            TopLevel::Struct(struc) => struc.generate(name_prefix),
+            TopLevel::Enum(en) => en.generate(name_prefix),
             TopLevel::FunctionHeader(h) => {
                 let mut s = String::new();
-                s.push_str(h.generate().as_str());
+                s.push_str(h.generate(name_prefix).as_str());
                 s.push_str(";");
                 s
             },

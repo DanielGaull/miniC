@@ -1,4 +1,4 @@
-use crate::codegen::simple::SimpleCodeGen;
+use crate::codegen::simple::{ModuleMemberCodeGen, SimpleCodeGen};
 
 use super::types::Type;
 
@@ -6,10 +6,11 @@ pub struct Struct {
     pub name: String,
     pub fields: Vec<StructField>,
 }
-impl SimpleCodeGen for Struct {
-    fn generate(&self) -> String {
+impl ModuleMemberCodeGen for Struct {
+    fn generate(&self, name_prefix: String) -> String {
         let mut s = String::new();
         s.push_str("typedef struct ");
+        s.push_str(name_prefix.as_str());
         s.push_str(self.name.as_str());
         s.push_str("__struct {\n");
         for field in &self.fields {

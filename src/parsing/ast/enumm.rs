@@ -1,13 +1,14 @@
-use crate::codegen::simple::SimpleCodeGen;
+use crate::codegen::simple::{ModuleMemberCodeGen, SimpleCodeGen};
 
 pub struct Enum {
     pub name: String,
     pub entries: Vec<EnumEntry>,
 }
-impl SimpleCodeGen for Enum {
-    fn generate(&self) -> String {
+impl ModuleMemberCodeGen for Enum {
+    fn generate(&self, name_prefix: String) -> String {
         let mut s = String::new();
         s.push_str("typedef enum ");
+        s.push_str(name_prefix.as_str());
         s.push_str(self.name.as_str());
         s.push_str("__enum {\n");
         for i in 0..self.entries.len() {

@@ -5,3 +5,7 @@ pub trait SimpleCodeGen {
 pub trait IndentCodeGen {
     fn generate(&self, indent_level: usize) -> String;
 }
+
+pub trait ModuleMemberCodeGen {
+    fn generate(&self, name_prefix: String) -> String;
+}
