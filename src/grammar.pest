@@ -38,7 +38,7 @@ typedefInner = _{ anonStruct | anonEnum | anonUnion | struct | enum | union | ty
 // == Core statements ==
 statementWithoutSemicolon = _{ varDec | varAssign | incDec | binOpVarAssign | 
     return | emptyReturn | continue | break | expression | doWhile }
-bigStatement = _{ if | while | for }
+bigStatement = _{ if | while | for | switch }
 statement = { (statementWithoutSemicolon ~ ";") | bigStatement }
 varAssign = { identExpr ~ "=" ~ expression }
 binOpVarAssign = { identExpr ~ arithLogicBinOp ~ "=" ~ expression }
@@ -64,6 +64,10 @@ else = { "else" ~ "{" ~ statement* ~ "}" }
 while = { "while" ~ conditionBody }
 doWhile = { "do" ~ "{" ~ statement* ~ "}" ~ "while" ~ "(" ~ expression ~ ")" }
 for = { "for" ~ "(" ~ statement ~ expression ~ ";" ~ statementWithoutSemicolon ~ ")" ~ "{" ~ statement* ~ "}" }
+
+switch = { "switch" ~ "(" ~ atom ~ ")" ~ "{" ~ case* ~ default? ~ "}" }
+case = { "case" ~ atom ~ ":" ~ statement* }
+default = { "default" ~ ":" ~ statement* }
 
 // == Expressions ==
 atom = { int | long | double | float | boolean | char | string | typeCast | unaryOperation | sizeof | 

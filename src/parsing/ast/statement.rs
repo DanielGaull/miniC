@@ -1,9 +1,14 @@
 use crate::codegen::simple::{SimpleCodeGen, IndentCodeGen};
 
-use super::{expression::{BinOp, Expression}, types::Type};
+use super::{expression::{Atom, BinOp, Expression}, types::Type};
 
 pub struct ConditionBody {
     pub condition: Expression,
+    pub body: Vec<Statement>,
+}
+
+pub struct CaseStatement {
+    pub atom: Atom,
     pub body: Vec<Statement>,
 }
 
@@ -44,6 +49,11 @@ pub enum Statement {
         condition: Expression,
         increment: Box<Statement>,
         body: Vec<Statement>,
+    },
+    Switch {
+        atom: Atom,
+        cases: Vec<CaseStatement>,
+        default: Option<Vec<Statement>>,
     },
     Continue,
     Break,
@@ -154,6 +164,34 @@ impl IndentCodeGen for Statement {
                 } else {
                     s.push_str("--");
                 }
+            },
+            Statement::Switch { atom, cases, default } => {
+                has_semicolon = false;
+                s.push_str("switch (");
+                s.push_str(atom.generate().as_str());
+                s.push_str(") {\n");
+                for case in cases {
+                    s.push_str(&indent_prefix);
+                    s.push_str("    ");
+                    s.push_str("case ");
+                    s.push_str(case.atom.generate().as_str());
+                    s.push_str(":\n");
+                    for statement in &case.body {
+                        s.push_str(statement.generate(indent_level + 2).as_str());
+                        s.push_str("\n");
+                    }
+                }
+                if let Some(the_default) = default {
+                    s.push_str(&indent_prefix);
+                    s.push_str("    ");
+                    s.push_str("default:\n");
+                    for statement in the_default {
+                        s.push_str(statement.generate(indent_level + 2).as_str());
+                        s.push_str("\n");
+                    }
+                }
+                s.push_str(&indent_prefix);
+                s.push_str("}\n");
             },
             Statement::Continue => s.push_str("continue"),
             Statement::Break => s.push_str("break"),

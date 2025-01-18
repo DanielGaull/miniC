@@ -121,7 +121,7 @@ miniC's standard library comes with additional features to make working in C eas
 miniC comes with the `bool` type, with `true` and `false` values for it. The `bool` struct does not have any additional functionality defined.
 
 ### Strings
-miniC defines a `string` struct, and string literals in C will be converted into this new `string` struct. The `string` struct defines a constructor taking in a `char *`, so you can easily convert any "vanilla" C string into a miniC `string`. The `string` uses a `char *` internally, so you can call `.toChars()` to get the `char *` value for the string. Keep in mind this *duplicates* the values, so manipulating the char array that comes out will *not* change the original.
+miniC defines a `string` struct, and string literals in C will be converted into this new `string` struct. The `string` struct defines a constructor taking in a `char *`, so you can easily convert any classic C string into a miniC `string`. The `string` uses a `char *` internally, so you can call `.toChars()` to get the `char *` value for the string. Keep in mind this *duplicates* the values, so manipulating the char array that comes out will *not* change the original.
 
 The `string` struct also defines a `length` property.
 TODO

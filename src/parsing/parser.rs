@@ -3,7 +3,7 @@ use std::fs;
 use pest::Parser;
 use pest_derive::Parser;
 
-use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField, StructMember}, statement::{ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, typedef::{TypeDef, TypeDefInner}, types::{Type, TypeType}};
+use super::ast::{enumm::{Enum, EnumEntry}, expression::{Atom, BinOp, ExprTail, Expression, UnaryOp}, function::{Function, FunctionHeader, Parameter}, identifier::Identifier, program::Program, sstruct::{Struct, StructField, StructMember}, statement::{CaseStatement, ConditionBody, IdentifierExpression, Statement}, toplevel::TopLevel, typedef::{TypeDef, TypeDefInner}, types::{Type, TypeType}};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"] // relative to src
@@ -292,7 +292,42 @@ impl MyMiniCParser {
             Rule::r#break => {
                 Result::Ok(Statement::Break)
             },
+            Rule::switch => {
+                let mut pairs = pair.into_inner();
+                let switch_atom = Self::parse_atom(pairs.next().unwrap().into_inner().next().unwrap())?;
+                let mut cases = Vec::<CaseStatement>::new();
+                let mut default: Option<Vec<Statement>> = None;
+                for p in pairs {
+                    match p.as_rule() {
+                        Rule::case => {
+                            let mut body = p.into_inner();
+                            let case_atom = Self::parse_atom(body.next().unwrap().into_inner().next().unwrap())?;
+                            let mut body_lines = Vec::<Statement>::new();
+                            for line in body {
+                                let statement = Self::parse_statement(line.into_inner().next().unwrap())?;
+                                body_lines.push(statement);
+                            }
+                            cases.push(CaseStatement {
+                                atom: case_atom,
+                                body: body_lines,
+                            })
+                        },
+                        Rule::default => {
+                            let mut body_lines = Vec::<Statement>::new();
+                            let body = p.into_inner();
+                            for line in body {
+                                let statement = Self::parse_statement(line.into_inner().next().unwrap())?;
+                                body_lines.push(statement);
+                            }
+                            default = Some(body_lines);
+                        },
+                        _ => return Result::Err(String::from("Invalid block in switch body")),
+                    }
+                }
+                Result::Ok(Statement::Switch { atom: switch_atom, cases: cases, default: default })
+            },
             _ => {
+                println!("\n\n{}\n\n", pair);
                 Result::Err(String::from("Could not parse statement"))
             },
         }
