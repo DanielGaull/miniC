@@ -1,2 +1,1 @@
-pub mod mutators;
-pub mod mutate;
+pub mod mutator;

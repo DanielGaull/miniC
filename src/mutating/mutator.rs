@@ -1,10 +1,9 @@
 use crate::parsing::ast::{expression::{Atom, ExprTail, Expression}, function::Function, program::Program, sstruct::Struct, statement::{CaseStatement, ConditionBody, Statement}, toplevel::TopLevel};
-use super::mutators::{ExpressionMutator, StatementMutator};
 use anyhow::Result;
 
 pub struct Mutator {
-    expr_mutators: Vec<Box<dyn ExpressionMutator>>,
-    stmt_mutators: Vec<Box<dyn StatementMutator>>,
+    expr_mutators: Vec<Box<fn(Expression) -> Result<Expression>>>,
+    stmt_mutators: Vec<Box<fn(Statement) -> Result<Statement>>>,
 }
 
 impl Mutator {
@@ -62,17 +61,17 @@ impl Mutator {
         })
     }
 
-    pub fn add_expression_mutator(&mut self, m: Box<dyn ExpressionMutator>) {
+    pub fn add_expression_mutator(&mut self, m: Box<fn(Expression) -> Result<Expression>>) {
         self.expr_mutators.push(m);
     }
 
-    pub fn add_statement_mutator(&mut self, m: Box<dyn StatementMutator>) {
+    pub fn add_statement_mutator(&mut self, m: Box<fn(Statement) -> Result<Statement>>) {
         self.stmt_mutators.push(m);
     }
 
     pub fn mutate_expression(&self, mut expression: Expression) -> Result<Expression> {
         for m in &self.expr_mutators {
-            expression = m.mutate_expression(expression)?;
+            expression = m(expression)?;
         }
 
         let atom = expression.atom;
@@ -163,7 +162,7 @@ impl Mutator {
 
     pub fn mutate_statement(&self, mut statement: Statement) -> Result<Statement> {
         for m in &self.stmt_mutators {
-            statement = m.mutate_statement(statement)?;
+            statement = m(statement)?;
         }
 
         match statement {
