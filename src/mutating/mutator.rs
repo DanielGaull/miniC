@@ -14,6 +14,14 @@ impl Mutator {
         }
     }
 
+    pub fn add_expression_mutator(&mut self, m: Box<fn(Expression) -> Result<Expression>>) {
+        self.expr_mutators.push(m);
+    }
+
+    pub fn add_statement_mutator(&mut self, m: Box<fn(Statement) -> Result<Statement>>) {
+        self.stmt_mutators.push(m);
+    }
+
     pub fn mutate_program(&self, p: Program) -> Result<Program> {
         let mut toplevels = Vec::new();
         for t in p.statements {
@@ -26,12 +34,12 @@ impl Mutator {
     fn mutate_toplevel(&self, t: TopLevel) -> Result<TopLevel> {
         match t {
             TopLevel::Module { name, body } => {
-                        let mut toplevels = Vec::new();
-                        for t in body {
-                            toplevels.push(self.mutate_toplevel(t)?);
-                        }
-                        Ok(TopLevel::Module { name: name, body: toplevels })
-                    },
+                let mut toplevels = Vec::new();
+                for t in body {
+                    toplevels.push(self.mutate_toplevel(t)?);
+                }
+                Ok(TopLevel::Module { name: name, body: toplevels })
+            },
             TopLevel::Function(func) => Ok(TopLevel::Function(self.mutate_function(func)?)),
             TopLevel::VarDeclaration { typ, name, right, modifier } => {
                 let resolved_right = if let Some(exp) = right {
@@ -59,14 +67,6 @@ impl Mutator {
             is_anonymous: struc.is_anonymous,
             is_union: struc.is_union,
         })
-    }
-
-    pub fn add_expression_mutator(&mut self, m: Box<fn(Expression) -> Result<Expression>>) {
-        self.expr_mutators.push(m);
-    }
-
-    pub fn add_statement_mutator(&mut self, m: Box<fn(Statement) -> Result<Statement>>) {
-        self.stmt_mutators.push(m);
     }
 
     pub fn mutate_expression(&self, mut expression: Expression) -> Result<Expression> {
