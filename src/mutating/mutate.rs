@@ -1,4 +1,4 @@
-use crate::parsing::ast::{expression::{Atom, Expression}, function::Function, program::Program, sstruct::Struct, statement::{CaseStatement, ConditionBody, Statement}, toplevel::TopLevel};
+use crate::parsing::ast::{expression::{Atom, ExprTail, Expression}, function::Function, program::Program, sstruct::Struct, statement::{CaseStatement, ConditionBody, Statement}, toplevel::TopLevel};
 use super::mutators::{ExpressionMutator, StatementMutator};
 use anyhow::Result;
 
@@ -74,7 +74,13 @@ impl Mutator {
         for m in &self.expr_mutators {
             expression = m.mutate_expression(expression)?;
         }
-        return Ok(expression);
+
+        let atom = expression.atom;
+        let tail = expression.tail;
+        let mutated_atom = self.mutate_atom(atom)?;
+        let mutated_tail = self.mutate_tail(tail)?;
+
+        return Ok(Expression { atom: mutated_atom, tail: mutated_tail });
     }
     fn mutate_atom(&self, atom: Atom) -> Result<Atom> {
         match atom {
@@ -96,6 +102,61 @@ impl Mutator {
             Atom::SizeOf(v) => Ok(Atom::SizeOf(v)),
             Atom::Wrapped(expression) => {
                 Ok(Atom::Wrapped(Box::new(self.mutate_expression(*expression)?)))
+            },
+        }
+    }
+    fn mutate_tail(&self, tail: ExprTail) -> Result<ExprTail> {
+        match tail {
+            ExprTail::None => Ok(ExprTail::None),
+            ExprTail::Call { body, next } => {
+                Ok(
+                    ExprTail::Call {
+                        body: body.into_iter().map(|c| self.mutate_expression(c)).collect::<Result<_, _>>()?,
+                        next: Box::new(self.mutate_tail(*next)?)
+                    }
+                )
+            },
+            ExprTail::BinaryOp { op, right, next } => {
+                Ok(
+                    ExprTail::BinaryOp { 
+                        op: op, 
+                        right: Box::new(self.mutate_expression(*right)?), 
+                        next: Box::new(self.mutate_tail(*next)?) 
+                    }
+                )
+            },
+            ExprTail::MemberAccess { member, next } => {
+                Ok(
+                    ExprTail::MemberAccess { 
+                        member: member, 
+                        next: Box::new(self.mutate_tail(*next)?) 
+                    }
+                )
+            },
+            ExprTail::PointerAccess { member, next } => {
+                Ok(
+                    ExprTail::PointerAccess { 
+                        member: member, 
+                        next: Box::new(self.mutate_tail(*next)?) 
+                    }
+                )
+            },
+            ExprTail::Index { inner, next } => {
+                Ok(
+                    ExprTail::Index { 
+                        inner: Box::new(self.mutate_expression(*inner)?), 
+                        next: Box::new(self.mutate_tail(*next)?) 
+                    }
+                )
+            },
+            ExprTail::TernaryConditional { second, third, next } => {
+                Ok(
+                    ExprTail::TernaryConditional { 
+                        second: Box::new(self.mutate_expression(*second)?), 
+                        third: Box::new(self.mutate_expression(*third)?), 
+                        next: Box::new(self.mutate_tail(*next)?) 
+                    }
+                )
             },
         }
     }
