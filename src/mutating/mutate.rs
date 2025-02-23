@@ -1,4 +1,4 @@
-use crate::parsing::ast::{expression::Expression, function::Function, program::Program, sstruct::Struct, statement::Statement, toplevel::TopLevel};
+use crate::parsing::ast::{expression::{Atom, Expression}, function::Function, program::Program, sstruct::Struct, statement::{CaseStatement, ConditionBody, Statement}, toplevel::TopLevel};
 use super::mutators::{ExpressionMutator, StatementMutator};
 use anyhow::Result;
 
@@ -76,12 +76,96 @@ impl Mutator {
         }
         return Ok(expression);
     }
+    fn mutate_atom(&self, atom: Atom) -> Result<Atom> {
+        match atom {
+            Atom::Char(v) => Ok(Atom::Char(v)),
+            Atom::Short(v) => Ok(Atom::Short(v)),
+            Atom::Int(v) => Ok(Atom::Int(v)),
+            Atom::TrueLong(v) => Ok(Atom::TrueLong(v)),
+            Atom::Float(v) => Ok(Atom::Float(v)),
+            Atom::Double(v) => Ok(Atom::Double(v)),
+            Atom::Boolean(v) => Ok(Atom::Boolean(v)),
+            Atom::String(v) => Ok(Atom::String(v)),
+            Atom::Identifier(identifier) => Ok(Atom::Identifier(identifier)),
+            Atom::TypeCast { typ, value } => {
+                Ok(Atom::TypeCast { typ: typ, value: Box::new(self.mutate_expression(*value)?) })
+            },
+            Atom::UnaryOperation { op, value } => {
+                Ok(Atom::UnaryOperation { op: op, value: Box::new(self.mutate_expression(*value)?) })
+            },
+            Atom::SizeOf(v) => Ok(Atom::SizeOf(v)),
+            Atom::Wrapped(expression) => {
+                Ok(Atom::Wrapped(Box::new(self.mutate_expression(*expression)?)))
+            },
+        }
+    }
 
     pub fn mutate_statement(&self, mut statement: Statement) -> Result<Statement> {
         for m in &self.stmt_mutators {
             statement = m.mutate_statement(statement)?;
         }
-        return Ok(statement);
+
+        match statement {
+            Statement::Expression(expression) => Ok(Statement::Expression(self.mutate_expression(expression)?)),
+            Statement::VarDec { typ, name, right, modifier } => {
+                let resolved_right = if let Some(exp) = right {
+                    Some(self.mutate_expression(exp)?)
+                } else {
+                    None
+                };
+                Ok(Statement::VarDec { typ: typ, name: name, right: resolved_right, modifier: modifier })
+            },
+            Statement::VarAssign { identifier, right } => {
+                Ok(Statement::VarAssign { identifier: identifier, right: self.mutate_expression(right)? })
+            },
+            Statement::BinOpVarAssign { identifier, op, right } => {
+                Ok(Statement::BinOpVarAssign { identifier: identifier, op: op, right: self.mutate_expression(right)? })
+            },
+            Statement::IncDec { identifier, is_inc } => Ok(Statement::IncDec { identifier: identifier, is_inc: is_inc }),
+            Statement::Return(expression) => {
+                Ok(Statement::Return(
+                    if let Some(body) = expression {
+                        Some(self.mutate_expression(body)?)
+                    } else {
+                        None
+                    }
+                ))
+            },
+            Statement::If { base, elseifs, tail } => {
+                Ok(Statement::If {
+                    base: self.mutate_condition_body(base)?,
+                    elseifs: elseifs.into_iter().map(|c| self.mutate_condition_body(c)).collect::<Result<_, _>>()?,
+                    tail: tail.map(|f| self.mutate_body(f)).transpose()?,
+                })
+            },
+            Statement::While(condition_body) => {
+                Ok(Statement::While(self.mutate_condition_body(condition_body)?))
+            },
+            Statement::DoWhile { condition, body } => {
+                Ok(Statement::DoWhile { condition: self.mutate_expression(condition)?, body: self.mutate_body(body)? })
+            },
+            Statement::For { init, condition, increment, body } => {
+                Ok(
+                    Statement::For {
+                        init: Box::new(self.mutate_statement(*init)?),
+                        condition: self.mutate_expression(condition)?,
+                        increment: Box::new(self.mutate_statement(*increment)?),
+                        body: self.mutate_body(body)?,
+                    }
+                )
+            },
+            Statement::Switch { atom, cases, default } => {
+                Ok(
+                    Statement::Switch {
+                        atom: self.mutate_atom(atom)?,
+                        cases: cases.into_iter().map(|c| self.mutate_case_body(c)).collect::<Result<_, _>>()?,
+                        default: default.map(|d| self.mutate_body(d)).transpose()?,
+                    }
+                )
+            },
+            Statement::Continue => Ok(Statement::Continue),
+            Statement::Break => Ok(Statement::Break),
+        }
     }
 
     pub fn mutate_body(&self, body: Vec<Statement>) -> Result<Vec<Statement>> {
@@ -90,5 +174,18 @@ impl Mutator {
             next_body.push(self.mutate_statement(s)?);
         }
         Ok(next_body)
+    }
+    fn mutate_condition_body(&self, body: ConditionBody) -> Result<ConditionBody> {
+        let exp = self.mutate_expression(body.condition)?;
+        let new_body = self.mutate_body(body.body)?;
+        Ok(ConditionBody {
+            condition: exp,
+            body: new_body,
+        })
+    }
+    fn mutate_case_body(&self, case: CaseStatement) -> Result<CaseStatement> {
+        let atom = self.mutate_atom(case.atom)?;
+        let body = self.mutate_body(case.body)?;
+        Ok(CaseStatement { atom: atom, body: body })
     }
 }
