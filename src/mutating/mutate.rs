@@ -1,4 +1,4 @@
-use crate::parsing::ast::{expression::Expression, function::Function, program::Program, sstruct::Struct, statement::{self, Statement}, toplevel::TopLevel};
+use crate::parsing::ast::{expression::Expression, function::Function, program::Program, sstruct::Struct, statement::Statement, toplevel::TopLevel};
 use super::mutators::{ExpressionMutator, StatementMutator};
 use anyhow::Result;
 
